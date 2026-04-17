@@ -1,4 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database.types";
+
+type UserRow = Database["public"]["Tables"]["users"]["Row"];
 
 interface TopBarProps {
   title: string;
@@ -10,14 +13,10 @@ export default async function TopBar({ title }: TopBarProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let profile: { full_name: string | null; role: string } | null = null;
+  let profile: UserRow | null = null;
   if (user) {
-    const { data } = await supabase
-      .from("users")
-      .select("full_name, role")
-      .eq("id", user.id)
-      .single();
-    profile = data;
+    const raw = await supabase.from("users").select("*").eq("id", user.id).single();
+    profile = (raw as unknown as { data: UserRow | null }).data;
   }
 
   const displayName = profile?.full_name ?? user?.email ?? "";

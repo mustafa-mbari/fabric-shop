@@ -1,7 +1,10 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database.types";
 
 export type UserRole = "worker" | "manager";
+
+type UserRow = Database["public"]["Tables"]["users"]["Row"];
 
 export const getRole = cache(async (): Promise<UserRole | null> => {
   const supabase = await createClient();
@@ -11,14 +14,11 @@ export const getRole = cache(async (): Promise<UserRole | null> => {
 
   if (!user) return null;
 
-  const result = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  const raw = await supabase.from("users").select("*").eq("id", user.id).single();
+  const row = raw as unknown as { data: UserRow | null };
 
-  if (result.error || !result.data) return null;
-  return result.data.role as UserRole;
+  if (!row.data) return null;
+  return row.data.role;
 });
 
 // Usage in Route Handlers:
