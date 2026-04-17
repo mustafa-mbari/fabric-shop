@@ -19,11 +19,12 @@ const accountItem = { href: "/account", label: "حسابي" };
 
 interface SideNavProps {
   isManager?: boolean;
+  isSuperAdmin?: boolean;
 }
 
-export default function SideNav({ isManager = false }: SideNavProps) {
+export default function SideNav({ isManager = false, isSuperAdmin = false }: SideNavProps) {
   const pathname = usePathname();
-  const navItems = isManager ? [...baseNavItems, ...managerNavItems] : baseNavItems;
+  const navItems = (isManager || isSuperAdmin) ? [...baseNavItems, ...managerNavItems] : baseNavItems;
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
@@ -63,7 +64,7 @@ export default function SideNav({ isManager = false }: SideNavProps) {
           alt=""
           className="rounded-xl shrink-0"
         />
-        <h2 className="text-sm font-bold text-gray-900 truncate">احمد السيد</h2>
+        <h2 className="text-sm font-bold text-gray-900 truncate">السيد</h2>
       </div>
 
       {/* Main nav */}

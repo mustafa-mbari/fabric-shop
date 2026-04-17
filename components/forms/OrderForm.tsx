@@ -129,7 +129,10 @@ export default function OrderForm({ defaultValues, onSubmit, submitLabel, loadin
 
       {/* Items */}
       <div className="bg-white rounded-2xl border border-gray-200 p-5">
-        <h3 className="text-sm font-semibold text-gray-700 mb-4">المنتجات</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-gray-700">المنتجات</h3>
+          <span className="text-xs text-gray-400">أسماء المنتجات من المخزون أو أدخل اسماً جديداً</span>
+        </div>
 
         <div className="space-y-4">
           {fields.map((field, i) => (

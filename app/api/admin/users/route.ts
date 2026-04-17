@@ -4,10 +4,10 @@ import { adminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
 
-const updateSchema = z.object({
-  userId: z.string().uuid(),
-  status: z.enum(["active", "rejected"]),
-});
+const updateSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("status"), userId: z.string().uuid(), status: z.enum(["active", "rejected"]) }),
+  z.object({ action: z.literal("role"),   userId: z.string().uuid(), role: z.enum(["worker", "manager", "super_admin"]) }),
+]);
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -23,9 +23,40 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
   }
 
+  if (parsed.data.action === "role") {
+    // Only super_admin can change roles
+    try {
+      await requireRole("super_admin");
+    } catch (res) {
+      return res as Response;
+    }
+
+    const { userId, role } = parsed.data;
+
+    const supabase = await createClient();
+    const { error: dbError } = await supabase
+      .from("users")
+      .update({ role } as never)
+      .eq("id", userId);
+
+    if (dbError) {
+      return NextResponse.json({ error: "فشل تحديث الدور" }, { status: 500 });
+    }
+
+    const { error: authError } = await adminClient.auth.admin.updateUserById(userId, {
+      user_metadata: { role },
+    });
+
+    if (authError) {
+      return NextResponse.json({ error: "فشل تحديث بيانات المستخدم" }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  }
+
+  // status update
   const { userId, status } = parsed.data;
 
-  // Update status in public.users
   const supabase = await createClient();
   const { error: dbError } = await supabase
     .from("users")
@@ -36,7 +67,6 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "فشل التحديث" }, { status: 500 });
   }
 
-  // Also update user_metadata so the middleware can read it from the JWT
   const { error: authError } = await adminClient.auth.admin.updateUserById(userId, {
     user_metadata: { status },
   });

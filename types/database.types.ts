@@ -386,7 +386,7 @@ export type Database = {
       debt_type: "WHOLESALE" | "RETAIL"
       order_status: "NEW" | "IN_PROGRESS" | "ON_HOLD" | "READY" | "DELIVERED"
       product_type: "METER" | "UNIT"
-      user_role: "worker" | "manager"
+      user_role: "worker" | "manager" | "super_admin"
       user_status: "pending" | "active" | "rejected"
     }
     CompositeTypes: {
@@ -521,7 +521,7 @@ export const Constants = {
       debt_type: ["WHOLESALE", "RETAIL"],
       order_status: ["NEW", "IN_PROGRESS", "ON_HOLD", "READY", "DELIVERED"],
       product_type: ["METER", "UNIT"],
-      user_role: ["worker", "manager"],
+      user_role: ["worker", "manager", "super_admin"],
       user_status: ["pending", "active", "rejected"],
     },
   },

@@ -14,11 +14,13 @@ export default async function AppShell({ children, title }: AppShellProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isManager = user?.user_metadata?.role === "manager";
+  const role = user?.user_metadata?.role as string | undefined;
+  const isManager = role === "manager" || role === "super_admin";
+  const isSuperAdmin = role === "super_admin";
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <SideNav isManager={isManager} />
+      <SideNav isManager={isManager} isSuperAdmin={isSuperAdmin} />
 
       <div className="flex flex-col flex-1 min-w-0">
         <TopBar title={title} />
