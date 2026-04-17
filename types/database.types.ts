@@ -66,6 +66,36 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          id: string
+          name: string
+          quantity: number
+          type: Database["public"]["Enums"]["product_type"]
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          quantity?: number
+          type: Database["public"]["Enums"]["product_type"]
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          quantity?: number
+          type?: Database["public"]["Enums"]["product_type"]
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string
@@ -122,6 +152,36 @@ export type Database = {
           id?: string | null
           name?: string | null
           phone?: string | null
+        }
+        Relationships: []
+      }
+      products_active: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          description: string | null
+          id: string | null
+          name: string | null
+          quantity: number | null
+          type: Database["public"]["Enums"]["product_type"] | null
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          id?: string | null
+          name?: string | null
+          quantity?: number | null
+          type?: Database["public"]["Enums"]["product_type"] | null
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          id?: string | null
+          name?: string | null
+          quantity?: number | null
+          type?: Database["public"]["Enums"]["product_type"] | null
         }
         Relationships: []
       }
