@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 type UserRecord = {
   id: string;
   full_name: string | null;
+  email: string | null;
   role: string;
   status: string;
   created_at: string;
@@ -80,6 +81,9 @@ export default function AdminUsersList() {
               <div className="min-w-0">
                 <p className="font-medium text-gray-900 truncate">
                   {user.full_name ?? "—"}
+                </p>
+                <p className="text-xs text-gray-400 truncate mt-0.5 font-normal" dir="ltr">
+                  {user.email ?? ""}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {roleLabel[user.role] ?? user.role}

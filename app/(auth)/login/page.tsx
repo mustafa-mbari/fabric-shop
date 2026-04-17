@@ -40,17 +40,26 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">مدير محل الأقمشة</h1>
-          <p className="mt-2 text-sm text-gray-500">تسجيل الدخول إلى حسابك</p>
+      {/* Logo / brand */}
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm mb-4">
+          <span className="text-3xl">🧵</span>
         </div>
+        <h1 className="text-2xl font-bold text-white">مدير محل الأقمشة</h1>
+        <p className="mt-1 text-sm text-blue-200">نظام الإدارة الداخلي</p>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+      {/* Card */}
+      <div className="bg-white rounded-2xl shadow-2xl p-7">
+        <h2 className="text-lg font-semibold text-gray-800 mb-6 text-center">
+          تسجيل الدخول
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 mb-1.5"
             >
               البريد الإلكتروني
             </label>
@@ -62,9 +71,10 @@ function LoginForm() {
               required
               autoComplete="email"
               inputMode="email"
-              className="w-full rounded-lg border border-gray-300 px-3 py-3 text-base
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3
+                         text-gray-900 placeholder:text-gray-400
                          focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-                         placeholder:text-gray-400"
+                         focus:bg-white transition-colors"
               placeholder="example@shop.com"
             />
           </div>
@@ -72,7 +82,7 @@ function LoginForm() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 mb-1.5"
             >
               كلمة المرور
             </label>
@@ -83,37 +93,40 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="w-full rounded-lg border border-gray-300 px-3 py-3 text-base
-                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3
+                         text-gray-900
+                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                         focus:bg-white transition-colors"
             />
           </div>
 
           {error && (
-            <p
-              role="alert"
-              className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2"
-            >
-              {error}
-            </p>
+            <div role="alert" className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+              <span className="text-red-500 mt-0.5 shrink-0">⚠</span>
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-700
-                       disabled:opacity-50 text-white font-medium rounded-lg py-3 text-base
-                       transition-colors duration-150 min-h-[48px]"
+            className="w-full rounded-xl py-3 text-base font-semibold text-white
+                       transition-all duration-150 min-h-[48px] mt-2
+                       disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ background: loading ? "#6b7280" : "linear-gradient(135deg, #0284c7, #0369a1)" }}
           >
             {loading ? "جارٍ تسجيل الدخول..." : "تسجيل الدخول"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
-          لا تملك حساباً؟{" "}
-          <Link href="/register" className="text-brand-600 font-medium hover:underline">
-            طلب التسجيل
-          </Link>
-        </p>
+        <div className="mt-6 pt-5 border-t border-gray-100 text-center">
+          <p className="text-sm text-gray-500">
+            لا تملك حساباً؟{" "}
+            <Link href="/register" className="text-brand-600 font-semibold hover:text-brand-700 hover:underline">
+              طلب التسجيل
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
