@@ -66,6 +66,116 @@ export type Database = {
         }
         Relationships: []
       }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          price_per_unit: number
+          product_name: string
+          quantity: number
+          total_price: number | null
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          price_per_unit: number
+          product_name: string
+          quantity: number
+          total_price?: number | null
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          price_per_unit?: number
+          product_name?: string
+          quantity?: number
+          total_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders_active"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          created_by: string
+          customer_id: string | null
+          customer_name: string | null
+          deleted_at: string | null
+          delivery_date: string | null
+          id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          total_price: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          customer_id?: string | null
+          customer_name?: string | null
+          deleted_at?: string | null
+          delivery_date?: string | null
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          total_price?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          deleted_at?: string | null
+          delivery_date?: string | null
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          total_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users_active"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_active"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           created_at: string
@@ -155,6 +265,74 @@ export type Database = {
         }
         Relationships: []
       }
+      orders_active: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          customer_id: string | null
+          customer_name: string | null
+          deleted_at: string | null
+          delivery_date: string | null
+          id: string | null
+          notes: string | null
+          status: Database["public"]["Enums"]["order_status"] | null
+          total_price: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          deleted_at?: string | null
+          delivery_date?: string | null
+          id?: string | null
+          notes?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          total_price?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          deleted_at?: string | null
+          delivery_date?: string | null
+          id?: string | null
+          notes?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          total_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users_active"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers_active"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products_active: {
         Row: {
           created_at: string | null
@@ -211,6 +389,18 @@ export type Database = {
       }
     }
     Functions: {
+      create_order_with_items: {
+        Args: {
+          p_created_by: string
+          p_customer_id: string
+          p_customer_name: string
+          p_delivery_date: string
+          p_items: Json
+          p_notes: string
+          p_status: Database["public"]["Enums"]["order_status"]
+        }
+        Returns: string
+      }
       is_manager: { Args: never; Returns: boolean }
     }
     Enums: {
