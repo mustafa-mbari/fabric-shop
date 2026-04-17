@@ -1,20 +1,15 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
-function LoginForm() {
+export default function RegisterPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const wasRejected = searchParams.get("rejected") === "1";
-
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(
-    wasRejected ? "تم رفض طلب تسجيلك. تواصل مع المدير للمزيد من المعلومات." : null,
-  );
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -22,31 +17,55 @@ function LoginForm() {
     setError(null);
     setLoading(true);
 
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fullName, email, password }),
     });
 
-    if (authError) {
-      setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+    const json = await res.json();
+
+    if (!res.ok) {
+      setError(json.error ?? "حدث خطأ، حاول مجدداً");
       setLoading(false);
       return;
     }
 
-    router.push("/");
-    router.refresh();
+    router.push("/pending");
   }
 
   return (
     <div className="w-full max-w-sm">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">مدير محل الأقمشة</h1>
-          <p className="mt-2 text-sm text-gray-500">تسجيل الدخول إلى حسابك</p>
+          <h1 className="text-2xl font-bold text-gray-900">إنشاء حساب جديد</h1>
+          <p className="mt-2 text-sm text-gray-500">
+            سيتم مراجعة طلبك من قبل المدير
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+          <div>
+            <label
+              htmlFor="fullName"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              الاسم الكامل
+            </label>
+            <input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              autoComplete="name"
+              className="w-full rounded-lg border border-gray-300 px-3 py-3 text-base
+                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                         placeholder:text-gray-400"
+              placeholder="محمد أحمد"
+            />
+          </div>
+
           <div>
             <label
               htmlFor="email"
@@ -82,9 +101,10 @@ function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete="current-password"
+              autoComplete="new-password"
               className="w-full rounded-lg border border-gray-300 px-3 py-3 text-base
                          focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+              placeholder="8 أحرف على الأقل"
             />
           </div>
 
@@ -104,25 +124,17 @@ function LoginForm() {
                        disabled:opacity-50 text-white font-medium rounded-lg py-3 text-base
                        transition-colors duration-150 min-h-[48px]"
           >
-            {loading ? "جارٍ تسجيل الدخول..." : "تسجيل الدخول"}
+            {loading ? "جارٍ التسجيل..." : "طلب التسجيل"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-500">
-          لا تملك حساباً؟{" "}
-          <Link href="/register" className="text-brand-600 font-medium hover:underline">
-            طلب التسجيل
+          لديك حساب؟{" "}
+          <Link href="/login" className="text-brand-600 font-medium hover:underline">
+            تسجيل الدخول
           </Link>
         </p>
       </div>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
   );
 }

@@ -1,3 +1,4 @@
+import { createClient } from "@/lib/supabase/server";
 import BottomNav from "./BottomNav";
 import SideNav from "./SideNav";
 import TopBar from "./TopBar";
@@ -7,10 +8,17 @@ interface AppShellProps {
   title: string;
 }
 
-export default function AppShell({ children, title }: AppShellProps) {
+export default async function AppShell({ children, title }: AppShellProps) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const isManager = user?.user_metadata?.role === "manager";
+
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <SideNav />
+      <SideNav isManager={isManager} />
 
       <div className="flex flex-col flex-1 min-w-0">
         <TopBar title={title} />

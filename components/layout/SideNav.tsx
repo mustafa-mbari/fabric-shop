@@ -3,17 +3,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const navItems = [
+const baseNavItems = [
   { href: "/", label: "الرئيسية" },
   { href: "/customers", label: "العملاء" },
   { href: "/orders", label: "الطلبات" },
   { href: "/debts/wholesale", label: "الديون" },
   { href: "/inventory", label: "المخزون" },
   { href: "/tasks", label: "المهام" },
-] as const;
+];
 
-export default function SideNav() {
+const managerNavItems = [{ href: "/admin/users", label: "المستخدمون" }];
+
+interface SideNavProps {
+  isManager?: boolean;
+}
+
+export default function SideNav({ isManager = false }: SideNavProps) {
   const pathname = usePathname();
+  const navItems = isManager ? [...baseNavItems, ...managerNavItems] : baseNavItems;
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
