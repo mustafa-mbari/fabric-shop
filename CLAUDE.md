@@ -28,7 +28,13 @@ The repo is in the planning/scaffolding phase. Treat `IMPLEMENTATION_PLAN.md` as
    - `orders.total_price`, `debts.amount_paid` updated by triggers.
    - `order_items.total_price`, `debts.remaining` are GENERATED columns.
    - The UI never persists computed totals — it reads them back from the DB.
-4. **Money is `numeric(12,2)`.** Never `float`/`double`.
+4. **Currency is Iraqi Dinar (IQD), no cents, smallest denomination 250.**
+   - Store all money as `bigint` (whole IQD). Never `numeric`, `float`, `double`, or `decimal`.
+   - Every money column: `CHECK (col >= 0 AND col % 250 = 0)`.
+   - Zod: `z.number().int().nonnegative().multipleOf(250)`.
+   - Inputs: `<input type="number" step="250" inputMode="numeric">`.
+   - Display via `lib/utils/money.ts` using `Intl.NumberFormat('ar-IQ', { style: 'currency', currency: 'IQD', maximumFractionDigits: 0 })` → e.g. `١٢٣٬٠٠٠ د.ع`.
+   - Never round silently — reject non-multiples of 250 with an Arabic error message.
 5. **Soft delete only.** Every soft-deletable table has `deleted_at`. Reads go through `*_active` views. RLS denies hard `DELETE` to all clients.
 6. **Role enforcement is server-side.** UI hiding a button is cosmetic. Every mutating Route Handler calls `requireRole()` where needed. Manager-only: product writes and all deletes.
 7. **Transactional writes** (e.g. order + items) go through Supabase RPCs, not multiple client calls.

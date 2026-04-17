@@ -8,6 +8,19 @@ The repository is a greenfield Next.js + Supabase project. The plan below establ
 
 ---
 
+## 0. Currency
+
+- **Currency:** Iraqi Dinar (IQD / د.ع).
+- **No fractional units (no cents).** All money is stored as whole integers.
+- **Smallest denomination: 250 IQD.** All input amounts must be a multiple of 250. Enforce in:
+  - Zod schemas: `z.number().int().nonnegative().multipleOf(250)`.
+  - DB: `CHECK (amount % 250 = 0)` on every money column.
+  - UI: number inputs `step="250"` and `inputMode="numeric"`.
+- **Storage type:** `bigint` for all money columns (debt totals can grow large in IQD; no decimals).
+- **Display:** thousands-separated Arabic-Indic digits (e.g. `١٢٣٬٠٠٠ د.ع`) via `Intl.NumberFormat('ar-IQ', { style: 'currency', currency: 'IQD', maximumFractionDigits: 0 })`. Centralize in `lib/utils/money.ts`.
+
+---
+
 ## 1. Architecture Overview
 
 ### High-level system design
@@ -139,12 +152,14 @@ fabric-shop/
 - `description` text
 - `created_at`, `deleted_at`
 
+> **Money columns** below use `bigint` (whole IQD), default 0, with `CHECK (col >= 0 AND col % 250 = 0)`.
+
 **orders**
 - `id` uuid PK
 - `customer_id` uuid FK → customers (nullable)
 - `customer_name` text  *(fallback if no customer)*
 - `status` enum (`NEW`,`IN_PROGRESS`,`ON_HOLD`,`READY`,`DELIVERED`)
-- `total_price` numeric  *(maintained by trigger)*
+- `total_price` bigint  *(IQD, multiple of 250, maintained by trigger)*
 - `notes` text
 - `delivery_date` date
 - `created_by` uuid FK → users
@@ -155,16 +170,16 @@ fabric-shop/
 - `order_id` uuid FK → orders **on delete cascade**
 - `product_name` text  *(snapshot, not FK — products are loose per PRD)*
 - `quantity` numeric
-- `price_per_unit` numeric
-- `total_price` numeric **GENERATED ALWAYS AS (quantity * price_per_unit) STORED**
+- `price_per_unit` bigint  *(IQD, multiple of 250)*
+- `total_price` bigint **GENERATED ALWAYS AS (quantity * price_per_unit) STORED**  *(IQD)*
 
 **debts**
 - `id` uuid PK
 - `customer_id` uuid FK → customers not null
 - `type` enum (`WHOLESALE` | `RETAIL`)
-- `amount_total` numeric not null
-- `amount_paid` numeric default 0  *(updated by payment trigger)*
-- `remaining` numeric **GENERATED ALWAYS AS (amount_total - amount_paid) STORED**
+- `amount_total` bigint not null  *(IQD, multiple of 250)*
+- `amount_paid` bigint default 0  *(IQD, updated by payment trigger)*
+- `remaining` bigint **GENERATED ALWAYS AS (amount_total - amount_paid) STORED**  *(IQD)*
 - `note` text
 - `order_id` uuid FK → orders (nullable)
 - `created_by` uuid FK → users
@@ -173,7 +188,7 @@ fabric-shop/
 **payments**
 - `id` uuid PK
 - `debt_id` uuid FK → debts on delete cascade
-- `amount` numeric not null check (amount > 0)
+- `amount` bigint not null check (amount > 0 AND amount % 250 = 0)  *(IQD)*
 - `created_at`
 
 **tasks**
@@ -422,7 +437,7 @@ PDF endpoints, soft-delete UX, empty/loading/error states, accessibility.
 | **Phone uniqueness vs. soft delete** | Re-creating a deleted customer with same phone fails on unique index | Use partial unique index `WHERE deleted_at IS NULL`. |
 | **Mobile-first with desktop tables** | Two-layout duplication | Build one responsive component (cards on mobile → table on `md+`) from the start. |
 | **Search performance with Arabic text** | `ILIKE` on Arabic can be slow / accent-insensitive issues | Add `pg_trgm` GIN index on `customers.name` if/when search lags. |
-| **Currency / decimal precision** | Floats cause off-by-cent errors | Use `numeric(12,2)` for all money columns. |
+| **Currency precision (IQD, no cents)** | Floats / decimals cause rounding bugs; users may try to enter 100 IQD | Store all money as `bigint` whole IQD. Enforce `% 250 = 0` in DB CHECK, Zod, and `step="250"` on inputs. |
 | **No notifications/deadlines** | Out of scope per PRD; pressure may rise to add | Hold the line until MVP ships; capture requests in a backlog file. |
 
 ---
