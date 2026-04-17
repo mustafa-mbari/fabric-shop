@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useOrders, statusLabel, type OrderRow } from "@/hooks/useOrders";
 import { formatMoney } from "@/lib/utils/money";
+import { OrderCardSkeleton } from "@/components/ui/Skeleton";
 
 const STATUS_FILTERS: Array<{ value: OrderRow["status"] | ""; label: string }> = [
   { value: "",            label: "الكل" },
@@ -58,8 +59,8 @@ export default function OrdersList() {
       </div>
 
       {isLoading && (
-        <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-2">
+          {Array.from({ length: 4 }, (_, i) => <OrderCardSkeleton key={i} />)}
         </div>
       )}
 

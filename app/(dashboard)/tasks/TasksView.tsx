@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTasks, useUsers, useCreateTask, useUpdateTask, useDeleteTask, type TaskRow } from "@/hooks/useTasks";
 import { useRole } from "@/hooks/useRole";
 import { taskCreateSchema, type TaskCreate } from "@/lib/validation/task";
+import { TaskCardSkeleton } from "@/components/ui/Skeleton";
 
 const FILTERS = [
   { value: "all",     label: "الكل" },
@@ -26,6 +27,14 @@ function NewTaskForm({ onClose }: { onClose: () => void }) {
     resolver: zodResolver(taskCreateSchema),
   });
 
+  useEffect(() => {
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [onClose]);
+
   async function onSubmit(data: TaskCreate) {
     setError(null);
     try {
@@ -37,12 +46,12 @@ function NewTaskForm({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center" role="dialog" aria-modal="true" aria-label="مهمة جديدة">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white w-full md:w-[440px] md:rounded-2xl rounded-t-2xl p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-semibold text-gray-900">مهمة جديدة</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">✕</button>
+          <button onClick={onClose} aria-label="إغلاق" className="text-gray-400 hover:text-gray-600 p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300">✕</button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
@@ -95,14 +104,14 @@ function NewTaskForm({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl border border-gray-200 py-3 text-sm text-gray-600"
+              className="flex-1 rounded-xl border border-gray-200 py-3 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
             >
               إلغاء
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="flex-1 rounded-xl py-3 text-sm font-semibold text-white disabled:opacity-60"
+              className="flex-1 rounded-xl py-3 text-sm font-semibold text-white disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1"
               style={{ background: "linear-gradient(135deg, #0284c7, #0369a1)" }}
             >
               {isPending ? "..." : "إضافة"}
@@ -131,11 +140,13 @@ function TaskCard({ task }: { task: TaskRow }) {
           onClick={toggleDone}
           disabled={toggling}
           className={`mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center
-                      transition-colors ${task.done
-                        ? "bg-green-500 border-green-500 text-white"
-                        : "border-gray-300 hover:border-brand-400"
+                      transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1
+                      ${task.done
+                        ? "bg-green-500 border-green-500 text-white focus:ring-green-400"
+                        : "border-gray-300 hover:border-brand-400 focus:ring-brand-400"
                       }`}
           aria-label={task.done ? "علّم كغير مكتملة" : "علّم كمكتملة"}
+          aria-pressed={task.done}
         >
           {task.done && (
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,7 +175,7 @@ function TaskCard({ task }: { task: TaskRow }) {
         {isManager && (
           <button
             onClick={() => deleteTask(task.id)}
-            className="shrink-0 text-gray-300 hover:text-red-400 transition-colors p-1"
+            className="shrink-0 text-gray-300 hover:text-red-400 transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-red-300"
             aria-label="حذف المهمة"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,7 +200,7 @@ export default function TasksView() {
         <span className="text-sm text-gray-500">{tasks?.length ?? 0} مهمة</span>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
+          className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1"
           style={{ background: "linear-gradient(135deg, #0284c7, #0369a1)" }}
         >
           <span className="text-lg leading-none">+</span>
@@ -198,12 +209,13 @@ export default function TasksView() {
       </div>
 
       {/* Filter chips */}
-      <div className="flex gap-2 mb-5">
+      <div className="flex gap-2 mb-5" role="group" aria-label="تصفية المهام">
         {FILTERS.map((f) => (
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors
+            aria-pressed={filter === f.value}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-400
               ${filter === f.value
                 ? "bg-brand-600 text-white"
                 : "bg-white border border-gray-200 text-gray-600 hover:border-brand-300"
@@ -215,8 +227,8 @@ export default function TasksView() {
       </div>
 
       {isLoading && (
-        <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-2">
+          {Array.from({ length: 4 }, (_, i) => <TaskCardSkeleton key={i} />)}
         </div>
       )}
 
@@ -233,7 +245,7 @@ export default function TasksView() {
             {filter === "done" ? "لا توجد مهام مكتملة" : filter === "pending" ? "لا توجد مهام قيد التنفيذ" : "لا توجد مهام"}
           </p>
           {filter === "all" && (
-            <button onClick={() => setShowForm(true)} className="mt-4 text-sm text-brand-600 font-medium hover:underline">
+            <button onClick={() => setShowForm(true)} className="mt-4 text-sm text-brand-600 font-medium hover:underline focus:outline-none focus:underline">
               أضف أول مهمة
             </button>
           )}

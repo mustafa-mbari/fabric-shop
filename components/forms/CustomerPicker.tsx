@@ -38,6 +38,15 @@ export default function CustomerPicker({ value, onChange, error }: Props) {
     }
   }, [open, reset]);
 
+  useEffect(() => {
+    if (!open) return;
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open]);
+
   async function handleCreate(data: CustomerCreate) {
     setCreateError(null);
     try {
@@ -83,7 +92,7 @@ export default function CustomerPicker({ value, onChange, error }: Props) {
               <h3 className="font-semibold text-gray-900">
                 {mode === "pick" ? "اختر عميلاً" : "عميل جديد"}
               </h3>
-              <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">✕</button>
+              <button onClick={() => setOpen(false)} aria-label="إغلاق" className="text-gray-400 hover:text-gray-600 p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300">✕</button>
             </div>
 
             {mode === "pick" && (

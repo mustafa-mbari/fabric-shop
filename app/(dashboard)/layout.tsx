@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/getSession";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 export default async function DashboardLayout({
   children,
@@ -8,10 +9,9 @@ export default async function DashboardLayout({
 }) {
   const user = await getSession();
 
-  // Belt-and-suspenders: middleware already redirects, but this guards against edge cases.
   if (!user) {
     redirect("/login");
   }
 
-  return <>{children}</>;
+  return <ErrorBoundary>{children}</ErrorBoundary>;
 }

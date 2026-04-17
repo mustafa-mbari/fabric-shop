@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useProducts } from "@/hooks/useProducts";
 import { useRole } from "@/hooks/useRole";
+import { ProductCardSkeleton } from "@/components/ui/Skeleton";
 
 const typeLabel: Record<string, { text: string; className: string }> = {
   METER: { text: "متر",   className: "bg-blue-100 text-blue-700" },
@@ -55,8 +56,8 @@ export default function InventoryList() {
       </div>
 
       {isLoading && (
-        <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-2">
+          {Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} />)}
         </div>
       )}
 

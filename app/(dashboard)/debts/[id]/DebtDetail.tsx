@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDebt, usePayments, useAddPayment, useDeletePayment, useDeleteDebt } from "@/hooks/useDebts";
@@ -37,6 +37,14 @@ function AddPaymentSheet({
     defaultValues: { amount: Math.min(maxAmount, 0) },
   });
 
+  useEffect(() => {
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [onClose]);
+
   async function onSubmit(data: PaymentCreate) {
     setServerError(null);
     try {
@@ -48,12 +56,12 @@ function AddPaymentSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center" role="dialog" aria-modal="true" aria-label="تسجيل دفعة">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white w-full md:w-[420px] md:rounded-2xl rounded-t-2xl p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-semibold text-gray-900">تسجيل دفعة</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">✕</button>
+          <button onClick={onClose} aria-label="إغلاق" className="text-gray-400 hover:text-gray-600 p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300">✕</button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>

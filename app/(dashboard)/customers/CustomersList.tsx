@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useCustomers } from "@/hooks/useCustomers";
+import { CustomerCardSkeleton } from "@/components/ui/Skeleton";
 
 function SearchIcon() {
   return (
@@ -55,8 +56,8 @@ export default function CustomersList() {
       </div>
 
       {isLoading && (
-        <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-2">
+          {Array.from({ length: 4 }, (_, i) => <CustomerCardSkeleton key={i} />)}
         </div>
       )}
 
