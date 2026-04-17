@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useOrders, statusLabel, type OrderRow } from "@/hooks/useOrders";
+import { useRouter } from "next/navigation";
+import { useOrders, useDeleteOrder, statusLabel, type OrderRow } from "@/hooks/useOrders";
+import { useRole } from "@/hooks/useRole";
 import { formatMoney } from "@/lib/utils/money";
 import { OrderCardSkeleton } from "@/components/ui/Skeleton";
+import ActionMenu from "@/components/ui/ActionMenu";
 
 const STATUS_FILTERS: Array<{ value: OrderRow["status"] | ""; label: string }> = [
   { value: "",            label: "الكل" },
@@ -22,9 +25,21 @@ function formatDate(d: string | null) {
 
 export default function OrdersList() {
   const [statusFilter, setStatusFilter] = useState<OrderRow["status"] | "">("");
+  const router = useRouter();
+  const { isManager } = useRole();
   const { data: orders, isLoading, isError } = useOrders(
     statusFilter ? { status: statusFilter } : undefined,
   );
+  const { mutateAsync: deleteOrder } = useDeleteOrder();
+
+  function menuItems(id: string) {
+    return [
+      { label: "التفاصيل / تعديل", onClick: () => router.push(`/orders/${id}`) },
+      ...(isManager
+        ? [{ label: "حذف", danger: true as const, requireConfirm: true, onClick: () => deleteOrder(id) }]
+        : []),
+    ];
+  }
 
   return (
     <>
@@ -42,7 +57,7 @@ export default function OrdersList() {
       </div>
 
       {/* Status filter chips */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
         {STATUS_FILTERS.map((f) => (
           <button
             key={f.value}
@@ -89,26 +104,30 @@ export default function OrdersList() {
             {orders.map((o) => {
               const badge = statusLabel[o.status];
               return (
-                <Link
-                  key={o.id}
-                  href={`/orders/${o.id}`}
-                  className="block bg-white rounded-xl border border-gray-200 p-4 active:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="font-semibold text-gray-900 truncate">
-                      {o.customer_name ?? "عميل غير محدد"}
-                    </p>
-                    <span className={`shrink-0 text-xs font-medium px-2.5 py-1 rounded-full ${badge.className}`}>
-                      {badge.text}
-                    </span>
+                <div key={o.id} className="relative">
+                  <Link
+                    href={`/orders/${o.id}`}
+                    className="block bg-white rounded-xl border border-gray-200 p-4 pe-12 active:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <p className="font-semibold text-gray-900 truncate">
+                        {o.customer_name ?? "عميل غير محدد"}
+                      </p>
+                      <span className={`shrink-0 text-xs font-medium px-2.5 py-1 rounded-full ${badge.className}`}>
+                        {badge.text}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-gray-800">{formatMoney(o.total_price)}</p>
+                      {o.delivery_date && (
+                        <p className="text-xs text-gray-400">تسليم: {formatDate(o.delivery_date)}</p>
+                      )}
+                    </div>
+                  </Link>
+                  <div className="absolute top-2 end-2">
+                    <ActionMenu items={menuItems(o.id)} />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-gray-800">{formatMoney(o.total_price)}</p>
-                    {o.delivery_date && (
-                      <p className="text-xs text-gray-400">تسليم: {formatDate(o.delivery_date)}</p>
-                    )}
-                  </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -122,7 +141,7 @@ export default function OrdersList() {
                   <th className="text-start px-3 py-3 font-medium text-gray-600">الحالة</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">الإجمالي</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">التسليم</th>
-                  <th className="py-3 pe-4" />
+                  <th className="py-3 pe-3 w-12" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -140,10 +159,8 @@ export default function OrdersList() {
                       </td>
                       <td className="px-3 py-3.5 font-semibold text-gray-800">{formatMoney(o.total_price)}</td>
                       <td className="px-3 py-3.5 text-gray-500">{formatDate(o.delivery_date) ?? "—"}</td>
-                      <td className="pe-4 py-3.5 text-end">
-                        <Link href={`/orders/${o.id}`} className="text-brand-600 hover:text-brand-700 font-medium text-xs">
-                          تفاصيل ←
-                        </Link>
+                      <td className="pe-3 py-3.5 text-end">
+                        <ActionMenu items={menuItems(o.id)} />
                       </td>
                     </tr>
                   );

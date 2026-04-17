@@ -68,9 +68,10 @@ export default function CustomerDetail({ id }: { id: string }) {
         <h2 className="text-base font-semibold text-gray-900 mb-5">تعديل بيانات العميل</h2>
         <CustomerForm
           defaultValues={{
-            name: customer.name,
-            phone: customer.phone,
+            name:    customer.name,
+            phone:   customer.phone,
             address: customer.address ?? undefined,
+            note:    customer.note ?? undefined,
           }}
           onSubmit={handleSubmit}
           submitLabel="حفظ التعديلات"

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
@@ -38,10 +39,10 @@ export default function RegisterPage() {
     <div className="w-full max-w-sm">
       {/* Brand header */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm mb-4">
-          <span className="text-3xl">🧵</span>
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm mb-4 overflow-hidden">
+          <Image src="/icons/icon-192.png" width={80} height={80} alt="احمد السيد" className="rounded-2xl" />
         </div>
-        <h1 className="text-2xl font-bold text-white">مدير محل الأقمشة</h1>
+        <h1 className="text-2xl font-bold text-white">احمد السيد</h1>
         <p className="mt-1 text-sm text-blue-200">نظام الإدارة الداخلي</p>
       </div>
 

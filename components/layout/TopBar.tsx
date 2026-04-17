@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database.types";
 
@@ -27,7 +28,7 @@ export default async function TopBar({ title }: TopBarProps) {
       <div className="flex items-center justify-between h-14 px-4 md:px-6">
         <h1 className="text-base font-semibold text-gray-900 truncate">{title}</h1>
         {profile && (
-          <div className="flex items-center gap-2">
+          <Link href="/account" className="flex items-center gap-2 hover:opacity-80 transition-opacity" aria-label="حسابي">
             <div className="text-end hidden sm:block">
               <p className="text-xs font-medium text-gray-900 leading-none">
                 {profile.full_name}
@@ -39,11 +40,10 @@ export default async function TopBar({ title }: TopBarProps) {
             <div
               className="w-9 h-9 rounded-full bg-brand-100 text-brand-700 flex items-center
                          justify-center text-sm font-semibold shrink-0"
-              aria-hidden="true"
             >
               {initial}
             </div>
-          </div>
+          </Link>
         )}
       </div>
     </header>

@@ -1,18 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const baseNavItems = [
-  { href: "/", label: "الرئيسية" },
-  { href: "/customers", label: "العملاء" },
-  { href: "/orders", label: "الطلبات" },
+  { href: "/",              label: "الرئيسية" },
+  { href: "/customers",    label: "العملاء" },
+  { href: "/orders",       label: "الطلبات" },
   { href: "/debts/wholesale", label: "الديون" },
-  { href: "/inventory", label: "المخزون" },
-  { href: "/tasks", label: "المهام" },
+  { href: "/inventory",    label: "المخزون" },
+  { href: "/tasks",        label: "المهام" },
 ];
 
 const managerNavItems = [{ href: "/admin/users", label: "المستخدمون" }];
+
+const accountItem = { href: "/account", label: "حسابي" };
 
 interface SideNavProps {
   isManager?: boolean;
@@ -28,35 +31,52 @@ export default function SideNav({ isManager = false }: SideNavProps) {
     return pathname.startsWith(base);
   }
 
+  function NavLink({ href, label }: { href: string; label: string }) {
+    const active = isActive(href);
+    return (
+      <Link
+        href={href}
+        className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium
+                    transition-colors duration-150
+                    ${active
+                      ? "bg-brand-50 text-brand-700"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+        aria-current={active ? "page" : undefined}
+      >
+        {label}
+      </Link>
+    );
+  }
+
   return (
     <aside
       className="hidden md:flex flex-col w-56 min-h-screen bg-white border-e border-gray-200 sticky top-0 shrink-0"
       aria-label="القائمة الجانبية"
     >
-      <div className="px-4 py-5 border-b border-gray-100">
-        <h2 className="text-base font-bold text-gray-900">مدير الأقمشة</h2>
+      {/* Brand header */}
+      <div className="px-4 py-4 border-b border-gray-100 flex items-center gap-3">
+        <Image
+          src="/icons/icon-192.png"
+          width={36}
+          height={36}
+          alt=""
+          className="rounded-xl shrink-0"
+        />
+        <h2 className="text-sm font-bold text-gray-900 truncate">احمد السيد</h2>
       </div>
+
+      {/* Main nav */}
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium
-                          transition-colors duration-150
-                          ${
-                            active
-                              ? "bg-brand-50 text-brand-700"
-                              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                          }`}
-              aria-current={active ? "page" : undefined}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
+        {navItems.map((item) => (
+          <NavLink key={item.href} href={item.href} label={item.label} />
+        ))}
       </nav>
+
+      {/* Account link at bottom */}
+      <div className="px-3 pb-4 border-t border-gray-100 pt-3">
+        <NavLink href={accountItem.href} label={accountItem.label} />
+      </div>
     </aside>
   );
 }

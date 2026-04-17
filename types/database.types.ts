@@ -46,6 +46,7 @@ export type Database = {
           deleted_at: string | null
           id: string
           name: string
+          note: string | null
           phone: string
         }
         Insert: {
@@ -54,6 +55,7 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           name: string
+          note?: string | null
           phone: string
         }
         Update: {
@@ -62,6 +64,7 @@ export type Database = {
           deleted_at?: string | null
           id?: string
           name?: string
+          note?: string | null
           phone?: string
         }
         Relationships: []

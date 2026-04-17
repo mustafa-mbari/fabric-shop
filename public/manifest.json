@@ -1,7 +1,7 @@
 {
-  "name": "مدير محل الأقمشة",
-  "short_name": "الأقمشة",
-  "description": "نظام إدارة محل الأقمشة",
+  "name": "احمد السيد",
+  "short_name": "احمد السيد",
+  "description": "نظام الإدارة الداخلي",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f9fafb",

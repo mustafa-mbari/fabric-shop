@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useDebts, type DebtRow } from "@/hooks/useDebts";
+import { useRouter } from "next/navigation";
+import { useDebts, useDeleteDebt, type DebtRow } from "@/hooks/useDebts";
+import { useRole } from "@/hooks/useRole";
 import { formatMoney } from "@/lib/utils/money";
 import { DebtCardSkeleton } from "@/components/ui/Skeleton";
+import ActionMenu from "@/components/ui/ActionMenu";
 
 function statusBadge(debt: DebtRow) {
   if (debt.remaining === 0)
@@ -22,8 +25,20 @@ interface Props {
 }
 
 export default function DebtsList({ type }: Props) {
+  const router = useRouter();
+  const { isManager } = useRole();
   const { data: debts, isLoading, isError } = useDebts(type);
+  const { mutateAsync: deleteDebt } = useDeleteDebt();
   const totalRemaining = debts?.reduce((s, d) => s + d.remaining, 0) ?? 0;
+
+  function menuItems(id: string) {
+    return [
+      { label: "التفاصيل", onClick: () => router.push(`/debts/${id}`) },
+      ...(isManager
+        ? [{ label: "حذف", danger: true as const, requireConfirm: true, onClick: () => deleteDebt(id) }]
+        : []),
+    ];
+  }
 
   return (
     <>
@@ -72,39 +87,43 @@ export default function DebtsList({ type }: Props) {
             {debts.map((d) => {
               const badge = statusBadge(d);
               return (
-                <Link
-                  key={d.id}
-                  href={`/debts/${d.id}`}
-                  className="block bg-white rounded-xl border border-gray-200 p-4 active:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">
-                        {d.customers?.name ?? "—"}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">{formatDate(d.created_at)}</p>
+                <div key={d.id} className="relative">
+                  <Link
+                    href={`/debts/${d.id}`}
+                    className="block bg-white rounded-xl border border-gray-200 p-4 pe-12 active:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900 truncate">
+                          {d.customers?.name ?? "—"}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">{formatDate(d.created_at)}</p>
+                      </div>
+                      <span className={`shrink-0 text-xs font-medium px-2.5 py-1 rounded-full ${badge.className}`}>
+                        {badge.text}
+                      </span>
                     </div>
-                    <span className={`shrink-0 text-xs font-medium px-2.5 py-1 rounded-full ${badge.className}`}>
-                      {badge.text}
-                    </span>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p className="text-xs text-gray-400">الإجمالي</p>
+                        <p className="text-sm font-semibold text-gray-800">{formatMoney(d.amount_total)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400">المدفوع</p>
+                        <p className="text-sm font-semibold text-green-700">{formatMoney(d.amount_paid)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400">المتبقي</p>
+                        <p className={`text-sm font-bold ${d.remaining > 0 ? "text-red-600" : "text-green-700"}`}>
+                          {formatMoney(d.remaining)}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                  <div className="absolute top-2 end-2">
+                    <ActionMenu items={menuItems(d.id)} />
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <p className="text-xs text-gray-400">الإجمالي</p>
-                      <p className="text-sm font-semibold text-gray-800">{formatMoney(d.amount_total)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">المدفوع</p>
-                      <p className="text-sm font-semibold text-green-700">{formatMoney(d.amount_paid)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">المتبقي</p>
-                      <p className={`text-sm font-bold ${d.remaining > 0 ? "text-red-600" : "text-green-700"}`}>
-                        {formatMoney(d.remaining)}
-                      </p>
-                    </div>
-                  </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -119,7 +138,7 @@ export default function DebtsList({ type }: Props) {
                   <th className="text-start px-3 py-3 font-medium text-gray-600">المدفوع</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">المتبقي</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">الحالة</th>
-                  <th className="py-3 pe-4" />
+                  <th className="py-3 pe-3 w-12" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -138,10 +157,8 @@ export default function DebtsList({ type }: Props) {
                           {badge.text}
                         </span>
                       </td>
-                      <td className="pe-4 py-3.5 text-end">
-                        <Link href={`/debts/${d.id}`} className="text-brand-600 hover:text-brand-700 font-medium text-xs">
-                          تفاصيل ←
-                        </Link>
+                      <td className="pe-3 py-3.5 text-end">
+                        <ActionMenu items={menuItems(d.id)} />
                       </td>
                     </tr>
                   );

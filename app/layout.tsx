@@ -11,13 +11,13 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: "مدير محل الأقمشة",
-  description: "نظام إدارة محل الأقمشة",
+  title: "احمد السيد",
+  description: "نظام الإدارة الداخلي",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "الأقمشة",
+    title: "احمد السيد",
   },
 };
 

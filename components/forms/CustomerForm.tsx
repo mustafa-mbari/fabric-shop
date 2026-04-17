@@ -81,6 +81,24 @@ export default function CustomerForm({ defaultValues, onSubmit, submitLabel, loa
         )}
       </div>
 
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          ملاحظة <span className="text-gray-400 font-normal text-xs">(اختياري)</span>
+        </label>
+        <textarea
+          {...register("note")}
+          rows={2}
+          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3
+                     text-gray-900 placeholder:text-gray-400 resize-none
+                     focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+                     focus:bg-white transition-colors"
+          placeholder="ملاحظات خاصة بالعميل..."
+        />
+        {errors.note && (
+          <p className="mt-1 text-xs text-red-600">{errors.note.message}</p>
+        )}
+      </div>
+
       {error && (
         <div role="alert" className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
           <span className="text-red-500 shrink-0">⚠</span>

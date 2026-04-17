@@ -71,7 +71,7 @@ export default function OrderDetail({ id }: { id: string }) {
 
   if (mode === "edit") {
     const customer: CustomerRow | null = order.customer_id
-      ? { id: order.customer_id, name: order.customer_name ?? "", phone: "", address: null, created_at: "" }
+      ? { id: order.customer_id, name: order.customer_name ?? "", phone: "", address: null, note: null, created_at: "" }
       : null;
 
     return (

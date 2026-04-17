@@ -2,17 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useCustomers } from "@/hooks/useCustomers";
+import { useRouter } from "next/navigation";
+import { useCustomers, useDeleteCustomer } from "@/hooks/useCustomers";
+import { useRole } from "@/hooks/useRole";
 import { CustomerCardSkeleton } from "@/components/ui/Skeleton";
-
-function SearchIcon() {
-  return (
-    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0Z" />
-    </svg>
-  );
-}
+import ActionMenu from "@/components/ui/ActionMenu";
 
 function PhoneIcon() {
   return (
@@ -25,7 +19,19 @@ function PhoneIcon() {
 
 export default function CustomersList() {
   const [search, setSearch] = useState("");
+  const router = useRouter();
+  const { isManager } = useRole();
   const { data: customers, isLoading, isError } = useCustomers(search);
+  const { mutateAsync: deleteCustomer } = useDeleteCustomer();
+
+  function menuItems(id: string) {
+    return [
+      { label: "تعديل", onClick: () => router.push(`/customers/${id}`) },
+      ...(isManager
+        ? [{ label: "حذف", danger: true as const, requireConfirm: true, onClick: () => deleteCustomer(id) }]
+        : []),
+    ];
+  }
 
   return (
     <>
@@ -33,7 +39,10 @@ export default function CustomersList() {
       <div className="flex gap-3 mb-5">
         <div className="relative flex-1">
           <span className="absolute inset-y-0 end-3 flex items-center pointer-events-none">
-            <SearchIcon />
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0Z" />
+            </svg>
           </span>
           <input
             type="search"
@@ -84,25 +93,27 @@ export default function CustomersList() {
           {/* Cards — mobile */}
           <div className="space-y-2 md:hidden">
             {customers.map((c) => (
-              <Link
-                key={c.id}
-                href={`/customers/${c.id}`}
-                className="block bg-white rounded-xl border border-gray-200 p-4 active:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-gray-900 truncate">{c.name}</p>
-                    <p className="flex items-center gap-1.5 text-sm text-gray-500 mt-1" dir="ltr">
-                      <PhoneIcon />
-                      {c.phone}
-                    </p>
-                    {c.address && (
-                      <p className="text-xs text-gray-400 mt-0.5 truncate">{c.address}</p>
-                    )}
-                  </div>
-                  <span className="text-gray-300 text-lg mt-0.5">›</span>
+              <div key={c.id} className="relative">
+                <Link
+                  href={`/customers/${c.id}`}
+                  className="block bg-white rounded-xl border border-gray-200 p-4 pe-12 active:bg-gray-50 transition-colors"
+                >
+                  <p className="font-semibold text-gray-900 truncate">{c.name}</p>
+                  <p className="flex items-center gap-1.5 text-sm text-gray-500 mt-1" dir="ltr">
+                    <PhoneIcon />
+                    {c.phone}
+                  </p>
+                  {c.address && (
+                    <p className="text-xs text-gray-400 mt-0.5 truncate">{c.address}</p>
+                  )}
+                  {c.note && (
+                    <p className="text-xs text-gray-400 mt-1 line-clamp-1">{c.note}</p>
+                  )}
+                </Link>
+                <div className="absolute top-2 end-2">
+                  <ActionMenu items={menuItems(c.id)} />
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
 
@@ -114,7 +125,8 @@ export default function CustomersList() {
                   <th className="text-start ps-5 pe-3 py-3 font-medium text-gray-600">الاسم</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">الهاتف</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">العنوان</th>
-                  <th className="py-3 pe-4" />
+                  <th className="text-start px-3 py-3 font-medium text-gray-600">ملاحظة</th>
+                  <th className="py-3 pe-3 w-12" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -123,10 +135,9 @@ export default function CustomersList() {
                     <td className="ps-5 pe-3 py-3.5 font-medium text-gray-900">{c.name}</td>
                     <td className="px-3 py-3.5 text-gray-600" dir="ltr">{c.phone}</td>
                     <td className="px-3 py-3.5 text-gray-500">{c.address ?? "—"}</td>
-                    <td className="pe-4 py-3.5 text-end">
-                      <Link href={`/customers/${c.id}`} className="text-brand-600 hover:text-brand-700 font-medium text-xs">
-                        تعديل ←
-                      </Link>
+                    <td className="px-3 py-3.5 text-gray-500 max-w-xs truncate">{c.note ?? "—"}</td>
+                    <td className="pe-3 py-3.5 text-end">
+                      <ActionMenu items={menuItems(c.id)} />
                     </td>
                   </tr>
                 ))}

@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useProducts } from "@/hooks/useProducts";
+import { useRouter } from "next/navigation";
+import { useProducts, useDeleteProduct } from "@/hooks/useProducts";
 import { useRole } from "@/hooks/useRole";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
+import ActionMenu from "@/components/ui/ActionMenu";
 
 const typeLabel: Record<string, { text: string; className: string }> = {
   METER: { text: "متر",   className: "bg-blue-100 text-blue-700" },
@@ -19,8 +21,19 @@ function quantityColor(qty: number) {
 
 export default function InventoryList() {
   const [search, setSearch] = useState("");
-  const { data: products, isLoading, isError } = useProducts(search);
+  const router = useRouter();
   const { isManager } = useRole();
+  const { data: products, isLoading, isError } = useProducts(search);
+  const { mutateAsync: deleteProduct } = useDeleteProduct();
+
+  function menuItems(id: string) {
+    return [
+      ...(isManager ? [{ label: "تعديل الكمية", onClick: () => router.push(`/inventory/${id}`) }] : []),
+      ...(isManager
+        ? [{ label: "حذف", danger: true as const, requireConfirm: true, onClick: () => deleteProduct(id) }]
+        : []),
+    ];
+  }
 
   return (
     <>
@@ -86,37 +99,31 @@ export default function InventoryList() {
             {products.map((p) => {
               const badge = typeLabel[p.type] ?? typeLabel["UNIT"]!;
               return (
-                <div
-                  key={p.id}
-                  className="bg-white rounded-xl border border-gray-200 p-4"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-gray-900 truncate">{p.name}</p>
-                        <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${badge.className}`}>
-                          {badge.text}
-                        </span>
+                <div key={p.id} className="relative">
+                  <div className="bg-white rounded-xl border border-gray-200 p-4 pe-12">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-gray-900 truncate">{p.name}</p>
+                          <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${badge.className}`}>
+                            {badge.text}
+                          </span>
+                        </div>
+                        {p.description && (
+                          <p className="text-xs text-gray-400 mt-0.5 truncate">{p.description}</p>
+                        )}
                       </div>
-                      {p.description && (
-                        <p className="text-xs text-gray-400 mt-0.5 truncate">{p.description}</p>
-                      )}
-                    </div>
-                    <div className="text-end shrink-0">
-                      <p className={`text-lg leading-none ${quantityColor(p.quantity)}`}>
-                        {p.quantity}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">{badge.text}</p>
+                      <div className="text-end shrink-0">
+                        <p className={`text-lg leading-none ${quantityColor(p.quantity)}`}>
+                          {p.quantity}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">{badge.text}</p>
+                      </div>
                     </div>
                   </div>
                   {isManager && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <Link
-                        href={`/inventory/${p.id}`}
-                        className="text-sm text-brand-600 font-medium hover:underline"
-                      >
-                        تعديل الكمية
-                      </Link>
+                    <div className="absolute top-2 end-2">
+                      <ActionMenu items={menuItems(p.id)} />
                     </div>
                   )}
                 </div>
@@ -133,7 +140,7 @@ export default function InventoryList() {
                   <th className="text-start px-3 py-3 font-medium text-gray-600">النوع</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">الكمية</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">الوصف</th>
-                  {isManager && <th className="py-3 pe-4" />}
+                  {isManager && <th className="py-3 pe-3 w-12" />}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -150,13 +157,8 @@ export default function InventoryList() {
                       <td className={`px-3 py-3.5 ${quantityColor(p.quantity)}`}>{p.quantity}</td>
                       <td className="px-3 py-3.5 text-gray-500 truncate max-w-xs">{p.description ?? "—"}</td>
                       {isManager && (
-                        <td className="pe-4 py-3.5 text-end">
-                          <Link
-                            href={`/inventory/${p.id}`}
-                            className="text-brand-600 hover:text-brand-700 font-medium text-xs"
-                          >
-                            تعديل ←
-                          </Link>
+                        <td className="pe-3 py-3.5 text-end">
+                          <ActionMenu items={menuItems(p.id)} />
                         </td>
                       )}
                     </tr>

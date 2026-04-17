@@ -4,6 +4,7 @@ export const customerCreateSchema = z.object({
   name:    z.string().min(1, "الاسم مطلوب").max(200),
   phone:   z.string().min(1, "رقم الهاتف مطلوب").max(30),
   address: z.string().max(500).optional(),
+  note:    z.string().max(1000).optional(),
 });
 
 export const customerUpdateSchema = customerCreateSchema.partial();
