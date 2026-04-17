@@ -55,18 +55,21 @@ export async function POST(request: NextRequest) {
 
   // Use RPC for atomic order + items insert
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const raw = await (adminClient.rpc as any)("create_order_with_items", {
+  const { data: orderId, error: rpcError } = await (adminClient.rpc as any)("create_order_with_items", {
     p_customer_id:   customer_id ?? null,
     p_customer_name: customer_name ?? null,
     p_status:        status,
     p_notes:         notes ?? null,
-    p_delivery_date: delivery_date ?? null,
+    p_delivery_date: delivery_date || null,
     p_created_by:    user.id,
     p_items:         items,
   });
-  const result = raw as unknown as { data: string | null; error: unknown };
 
-  if (!result.data) return NextResponse.json({ error: "فشل إنشاء الطلب" }, { status: 500 });
+  if (rpcError) {
+    console.error("[POST /api/orders] RPC error:", rpcError);
+    return NextResponse.json({ error: "فشل إنشاء الطلب", detail: rpcError.message }, { status: 500 });
+  }
+  if (!orderId) return NextResponse.json({ error: "فشل إنشاء الطلب" }, { status: 500 });
 
-  return NextResponse.json({ data: { id: result.data } }, { status: 201 });
+  return NextResponse.json({ data: { id: orderId } }, { status: 201 });
 }
