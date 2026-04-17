@@ -129,7 +129,7 @@ export default function OrderDetail({ id }: { id: string }) {
         </div>
 
         {/* Status stepper */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1">
+        <div className="flex flex-wrap gap-1.5">
           {STATUS_LIST.map((s) => {
             const b = statusLabel[s];
             const isActive = order.status === s;

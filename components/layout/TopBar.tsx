@@ -34,7 +34,7 @@ export default async function TopBar({ title }: TopBarProps) {
                 {profile.full_name}
               </p>
               <p className="text-xs text-gray-500 mt-0.5">
-                {profile.role === "manager" ? "مدير" : "موظف"}
+                {profile.role === "super_admin" ? "مدير عام" : profile.role === "manager" ? "مدير" : "موظف"}
               </p>
             </div>
             <div

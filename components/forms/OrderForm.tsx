@@ -200,9 +200,9 @@ export default function OrderForm({ defaultValues, onSubmit, submitLabel, loadin
                   <input
                     {...register(`items.${i}.quantity`, { valueAsNumber: true })}
                     type="number"
-                    inputMode="decimal"
-                    min={0.01}
-                    step={0.25}
+                    inputMode="numeric"
+                    min={1}
+                    step={1}
                     className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm
                                focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />

@@ -2,6 +2,7 @@ import AppShell from "@/components/layout/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import type { DashboardSummary } from "@/app/api/dashboard/summary/route";
 import { formatMoney } from "@/lib/utils/money";
+import Link from "next/link";
 
 async function getSummary(): Promise<DashboardSummary | null> {
   const supabase = await createClient();
@@ -12,6 +13,11 @@ async function getSummary(): Promise<DashboardSummary | null> {
 }
 
 export default async function DashboardPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const role = user?.user_metadata?.role as string | undefined;
+  const isManager = role === "manager" || role === "super_admin";
+
   const summary = await getSummary();
 
   const stats = [
@@ -62,6 +68,29 @@ export default async function DashboardPage() {
             </p>
           </div>
         )}
+
+        {/* Quick links — visible on mobile only (side nav handles desktop) */}
+        <div className="md:hidden">
+          <h2 className="text-xs font-medium text-gray-500 mb-2">روابط سريعة</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              href="/account"
+              className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-1.5 active:bg-gray-50"
+            >
+              <span className="text-xl">👤</span>
+              <span className="text-sm font-medium text-gray-800">حسابي</span>
+            </Link>
+            {isManager && (
+              <Link
+                href="/admin/users"
+                className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-1.5 active:bg-gray-50"
+              >
+                <span className="text-xl">👥</span>
+                <span className="text-sm font-medium text-gray-800">إدارة المستخدمين</span>
+              </Link>
+            )}
+          </div>
+        </div>
       </div>
     </AppShell>
   );

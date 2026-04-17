@@ -56,8 +56,9 @@ export default function OrdersList() {
         </Link>
       </div>
 
-      {/* Status filter chips */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+      {/* Status filter chips — sticky below TopBar */}
+      <div className="sticky top-14 z-20 bg-gray-50 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 mb-2">
+      <div className="flex gap-2 overflow-x-auto pb-0.5">
         {STATUS_FILTERS.map((f) => (
           <button
             key={f.value}
@@ -71,6 +72,7 @@ export default function OrdersList() {
             {f.label}
           </button>
         ))}
+      </div>
       </div>
 
       {isLoading && (

@@ -95,7 +95,7 @@ export default function AccountView({ initialName, email, role }: Props) {
             <p className="font-semibold text-gray-900 truncate">{initialName}</p>
             <p className="text-sm text-gray-500 truncate">{email}</p>
             <span className="inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full bg-brand-100 text-brand-700">
-              {role === "manager" ? "مدير" : "موظف"}
+              {role === "super_admin" ? "مدير عام" : role === "manager" ? "مدير" : "موظف"}
             </span>
           </div>
         </div>
