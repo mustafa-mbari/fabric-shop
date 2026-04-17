@@ -256,29 +256,35 @@ export type Database = {
       }
       products: {
         Row: {
+          color: string | null
           created_at: string
           deleted_at: string | null
           description: string | null
           id: string
           name: string
+          price: number | null
           quantity: number
           type: Database["public"]["Enums"]["product_type"]
         }
         Insert: {
+          color?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
           id?: string
           name: string
+          price?: number | null
           quantity?: number
           type: Database["public"]["Enums"]["product_type"]
         }
         Update: {
+          color?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
           id?: string
           name?: string
+          price?: number | null
           quantity?: number
           type?: Database["public"]["Enums"]["product_type"]
         }

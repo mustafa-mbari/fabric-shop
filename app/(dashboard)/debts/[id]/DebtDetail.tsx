@@ -34,7 +34,7 @@ function AddPaymentSheet({
     formState: { errors },
   } = useForm<PaymentCreate>({
     resolver: zodResolver(paymentCreateSchema),
-    defaultValues: { amount: Math.min(maxAmount, 0) },
+    defaultValues: { amount: maxAmount },
   });
 
   useEffect(() => {
@@ -74,6 +74,7 @@ function AddPaymentSheet({
               type="number"
               inputMode="numeric"
               min={250}
+              max={maxAmount}
               step={250}
               autoFocus
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3

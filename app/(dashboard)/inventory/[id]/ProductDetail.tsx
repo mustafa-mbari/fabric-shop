@@ -70,6 +70,8 @@ export default function ProductDetail({ id }: { id: string }) {
             type:        product.type,
             quantity:    product.quantity,
             description: product.description ?? undefined,
+            color:       product.color ?? undefined,
+            price:       product.price ?? undefined,
           }}
           onSubmit={handleSubmit}
           submitLabel="حفظ التعديلات"

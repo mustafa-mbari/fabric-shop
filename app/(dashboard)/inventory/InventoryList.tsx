@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useProducts, useDeleteProduct } from "@/hooks/useProducts";
@@ -22,9 +22,16 @@ function quantityColor(qty: number) {
 
 export default function InventoryList() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const router = useRouter();
   const { isManager } = useRole();
-  const { data: products, isLoading, isError } = useProducts(search);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const { data: products, isLoading, isError } = useProducts(debouncedSearch);
   const { mutateAsync: deleteProduct } = useDeleteProduct();
 
   function menuItems(id: string) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCustomers, useDeleteCustomer } from "@/hooks/useCustomers";
@@ -19,9 +19,16 @@ function PhoneIcon() {
 
 export default function CustomersList() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const router = useRouter();
   const { isManager } = useRole();
-  const { data: customers, isLoading, isError } = useCustomers(search);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const { data: customers, isLoading, isError } = useCustomers(debouncedSearch);
   const { mutateAsync: deleteCustomer } = useDeleteCustomer();
 
   function menuItems(id: string) {

@@ -312,7 +312,7 @@ export default function OrderForm({ defaultValues, onSubmit, submitLabel, loadin
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || fields.length === 0}
         className="w-full rounded-xl py-3 text-base font-semibold text-white
                    min-h-[48px] disabled:opacity-60 disabled:cursor-not-allowed"
         style={{ background: "linear-gradient(135deg, #0284c7, #0369a1)" }}

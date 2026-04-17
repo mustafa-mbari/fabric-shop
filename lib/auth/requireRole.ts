@@ -16,11 +16,14 @@ export const getRole = cache(async (): Promise<UserRole | null> => {
 
   if (!user) return null;
 
-  const raw = await supabase.from("users").select("*").eq("id", user.id).single();
-  const row = raw as unknown as { data: UserRow | null };
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
 
-  if (!row.data) return null;
-  return row.data.role as UserRole;
+  if (error || !data) return null;
+  return (data as unknown as UserRow).role as UserRole;
 });
 
 // Usage in Route Handlers:

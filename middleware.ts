@@ -63,8 +63,11 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
-    // Pending user → only allow /pending; redirect everything else there
-    if (status === "pending" && !isPendingPath && !pathname.startsWith("/api")) {
+    // Pending user → only allow /pending; block API calls, redirect all UI routes
+    if (status === "pending" && !isPendingPath) {
+      if (pathname.startsWith("/api")) {
+        return NextResponse.json({ error: "حساب قيد الانتظار" }, { status: 403 });
+      }
       const url = request.nextUrl.clone();
       url.pathname = "/pending";
       return NextResponse.redirect(url);
