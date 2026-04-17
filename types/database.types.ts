@@ -66,6 +66,70 @@ export type Database = {
         }
         Relationships: []
       }
+      debts: {
+        Row: {
+          amount_paid: number
+          amount_total: number
+          created_at: string
+          created_by: string
+          customer_id: string
+          deleted_at: string | null
+          id: string
+          note: string | null
+          order_id: string | null
+          remaining: number | null
+          type: Database["public"]["Enums"]["debt_type"]
+        }
+        Insert: {
+          amount_paid?: number
+          amount_total: number
+          created_at?: string
+          created_by: string
+          customer_id: string
+          deleted_at?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          remaining?: number | null
+          type: Database["public"]["Enums"]["debt_type"]
+        }
+        Update: {
+          amount_paid?: number
+          amount_total?: number
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          deleted_at?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          remaining?: number | null
+          type?: Database["public"]["Enums"]["debt_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           id: string
@@ -97,13 +161,6 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders_active"
             referencedColumns: ["id"]
           },
         ]
@@ -154,24 +211,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "orders_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users_active"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "orders_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          debt_id: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          debt_id: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          debt_id?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "orders_customer_id_fkey"
-            columns: ["customer_id"]
+            foreignKeyName: "payments_debt_id_fkey"
+            columns: ["debt_id"]
             isOneToOne: false
-            referencedRelation: "customers_active"
+            referencedRelation: "debts"
             referencedColumns: ["id"]
           },
         ]
@@ -238,155 +313,7 @@ export type Database = {
       }
     }
     Views: {
-      customers_active: {
-        Row: {
-          address: string | null
-          created_at: string | null
-          deleted_at: string | null
-          id: string | null
-          name: string | null
-          phone: string | null
-        }
-        Insert: {
-          address?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          id?: string | null
-          name?: string | null
-          phone?: string | null
-        }
-        Update: {
-          address?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          id?: string | null
-          name?: string | null
-          phone?: string | null
-        }
-        Relationships: []
-      }
-      orders_active: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          customer_id: string | null
-          customer_name: string | null
-          deleted_at: string | null
-          delivery_date: string | null
-          id: string | null
-          notes: string | null
-          status: Database["public"]["Enums"]["order_status"] | null
-          total_price: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          customer_id?: string | null
-          customer_name?: string | null
-          deleted_at?: string | null
-          delivery_date?: string | null
-          id?: string | null
-          notes?: string | null
-          status?: Database["public"]["Enums"]["order_status"] | null
-          total_price?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          customer_id?: string | null
-          customer_name?: string | null
-          deleted_at?: string | null
-          delivery_date?: string | null
-          id?: string | null
-          notes?: string | null
-          status?: Database["public"]["Enums"]["order_status"] | null
-          total_price?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "orders_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users_active"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers_active"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      products_active: {
-        Row: {
-          created_at: string | null
-          deleted_at: string | null
-          description: string | null
-          id: string | null
-          name: string | null
-          quantity: number | null
-          type: Database["public"]["Enums"]["product_type"] | null
-        }
-        Insert: {
-          created_at?: string | null
-          deleted_at?: string | null
-          description?: string | null
-          id?: string | null
-          name?: string | null
-          quantity?: number | null
-          type?: Database["public"]["Enums"]["product_type"] | null
-        }
-        Update: {
-          created_at?: string | null
-          deleted_at?: string | null
-          description?: string | null
-          id?: string | null
-          name?: string | null
-          quantity?: number | null
-          type?: Database["public"]["Enums"]["product_type"] | null
-        }
-        Relationships: []
-      }
-      users_active: {
-        Row: {
-          created_at: string | null
-          deleted_at: string | null
-          full_name: string | null
-          id: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
-        }
-        Insert: {
-          created_at?: string | null
-          deleted_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-        }
-        Update: {
-          created_at?: string | null
-          deleted_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       create_order_with_items: {
