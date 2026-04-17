@@ -123,6 +123,11 @@ export default function InventoryList() {
                             <p className="text-xs text-gray-400 truncate">{p.description}</p>
                           )}
                         </div>
+                        {p.price != null && p.quantity > 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            الإجمالي: <span className="font-semibold text-gray-700">{formatMoney(Math.floor(p.price * p.quantity))}</span>
+                          </p>
+                        )}
                       </div>
                       <div className="text-end shrink-0">
                         <p className={`text-lg leading-none ${quantityColor(p.quantity)}`}>
@@ -152,6 +157,7 @@ export default function InventoryList() {
                   <th className="text-start px-3 py-3 font-medium text-gray-600">اللون</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">السعر</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">الكمية</th>
+                  <th className="text-start px-3 py-3 font-medium text-gray-600">إجمالي المخزون</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">الوصف</th>
                   {isManager && <th className="py-3 pe-3 w-12" />}
                 </tr>
@@ -172,6 +178,11 @@ export default function InventoryList() {
                         {p.price != null ? formatMoney(p.price) : "—"}
                       </td>
                       <td className={`px-3 py-3.5 ${quantityColor(p.quantity)}`}>{p.quantity}</td>
+                      <td className="px-3 py-3.5 font-medium text-gray-800">
+                        {p.price != null && p.quantity > 0
+                          ? formatMoney(Math.floor(p.price * p.quantity))
+                          : "—"}
+                      </td>
                       <td className="px-3 py-3.5 text-gray-500 truncate max-w-xs">{p.description ?? "—"}</td>
                       {isManager && (
                         <td className="pe-3 py-3.5 text-end">
