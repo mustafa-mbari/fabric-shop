@@ -281,6 +281,54 @@ export type Database = {
         }
         Relationships: []
       }
+      tasks: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          description: string | null
+          done: boolean
+          id: string
+          title: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by: string
+          deleted_at?: string | null
+          description?: string | null
+          done?: boolean
+          id?: string
+          title: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          description?: string | null
+          done?: boolean
+          id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string
@@ -328,6 +376,7 @@ export type Database = {
         }
         Returns: string
       }
+      dashboard_summary: { Args: never; Returns: Json }
       is_manager: { Args: never; Returns: boolean }
     }
     Enums: {
