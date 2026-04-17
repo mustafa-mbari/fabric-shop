@@ -17,6 +17,8 @@ const STATUS_OPTIONS = [
   { value: "DELIVERED",   label: "مُسلَّم" },
 ];
 
+const typeLabel: Record<string, string> = { METER: "متر", UNIT: "وحدة" };
+
 interface Props {
   defaultValues?: Partial<OrderCreate> & { customer?: CustomerRow | null };
   onSubmit: (data: OrderCreate) => Promise<void>;
@@ -65,8 +67,14 @@ export default function OrderForm({ defaultValues, onSubmit, submitLabel, loadin
     setValue("customer_name", c?.name ?? "");
   }
 
-  function handleProductSelect(index: number, productName: string) {
-    setValue(`items.${index}.product_name`, productName);
+  function handleProductSelect(index: number, productId: string) {
+    if (!productId) return;
+    const product = products?.find((p) => p.id === productId);
+    if (!product) return;
+    setValue(`items.${index}.product_name`, product.name);
+    if (product.price != null) {
+      setValue(`items.${index}.price_per_unit`, product.price);
+    }
   }
 
   async function handleFormSubmit(data: OrderCreate) {
@@ -129,10 +137,7 @@ export default function OrderForm({ defaultValues, onSubmit, submitLabel, loadin
 
       {/* Items */}
       <div className="bg-white rounded-2xl border border-gray-200 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-700">المنتجات</h3>
-          <span className="text-xs text-gray-400">أسماء المنتجات من المخزون أو أدخل اسماً جديداً</span>
-        </div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-4">المنتجات</h3>
 
         <div className="space-y-4">
           {fields.map((field, i) => (
@@ -150,22 +155,40 @@ export default function OrderForm({ defaultValues, onSubmit, submitLabel, loadin
                 )}
               </div>
 
-              {/* Product name with suggestions */}
+              {/* Product picker from inventory */}
+              {products && products.length > 0 && (
+                <div className="mb-3">
+                  <label className="block text-xs text-gray-500 mb-1">اختر من المخزون</label>
+                  <select
+                    defaultValue=""
+                    onChange={(e) => handleProductSelect(i, e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  >
+                    <option value="">— اختر منتجاً —</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                        {p.color ? ` — ${p.color}` : ""}
+                        {` (${typeLabel[p.type] ?? p.type})`}
+                        {p.price != null ? ` — ${formatMoney(p.price)}` : ""}
+                        {` — متوفر: ${p.quantity}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Product name (snapshot, editable) */}
               <div className="mb-3">
+                <label className="block text-xs text-gray-500 mb-1">اسم المنتج <span className="text-red-400">*</span></label>
                 <input
                   {...register(`items.${i}.product_name`)}
-                  list={`products-list-${i}`}
                   type="text"
                   className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm
                              focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="اسم المنتج"
-                  onChange={(e) => handleProductSelect(i, e.target.value)}
                 />
-                <datalist id={`products-list-${i}`}>
-                  {products?.map((p) => (
-                    <option key={p.id} value={p.name} />
-                  ))}
-                </datalist>
                 {errors.items?.[i]?.product_name && (
                   <p className="mt-1 text-xs text-red-600">{errors.items[i]?.product_name?.message}</p>
                 )}

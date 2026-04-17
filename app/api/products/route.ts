@@ -9,6 +9,8 @@ type ProductRow = {
   name: string;
   type: "METER" | "UNIT";
   quantity: number;
+  color: string | null;
+  price: number | null;
   description: string | null;
   created_at: string;
   deleted_at: string | null;

@@ -7,6 +7,7 @@ import { useProducts, useDeleteProduct } from "@/hooks/useProducts";
 import { useRole } from "@/hooks/useRole";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
 import ActionMenu from "@/components/ui/ActionMenu";
+import { formatMoney } from "@/lib/utils/money";
 
 const typeLabel: Record<string, { text: string; className: string }> = {
   METER: { text: "متر",   className: "bg-blue-100 text-blue-700" },
@@ -28,7 +29,7 @@ export default function InventoryList() {
 
   function menuItems(id: string) {
     return [
-      ...(isManager ? [{ label: "تعديل الكمية", onClick: () => router.push(`/inventory/${id}`) }] : []),
+      ...(isManager ? [{ label: "تعديل", onClick: () => router.push(`/inventory/${id}`) }] : []),
       ...(isManager
         ? [{ label: "حذف", danger: true as const, requireConfirm: true, onClick: () => deleteProduct(id) }]
         : []),
@@ -108,10 +109,20 @@ export default function InventoryList() {
                           <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${badge.className}`}>
                             {badge.text}
                           </span>
+                          {p.color && (
+                            <span className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                              {p.color}
+                            </span>
+                          )}
                         </div>
-                        {p.description && (
-                          <p className="text-xs text-gray-400 mt-0.5 truncate">{p.description}</p>
-                        )}
+                        <div className="flex items-center gap-3 mt-1">
+                          {p.price != null && (
+                            <p className="text-xs text-brand-700 font-medium">{formatMoney(p.price)}</p>
+                          )}
+                          {p.description && (
+                            <p className="text-xs text-gray-400 truncate">{p.description}</p>
+                          )}
+                        </div>
                       </div>
                       <div className="text-end shrink-0">
                         <p className={`text-lg leading-none ${quantityColor(p.quantity)}`}>
@@ -138,6 +149,8 @@ export default function InventoryList() {
                 <tr>
                   <th className="text-start ps-5 pe-3 py-3 font-medium text-gray-600">المنتج</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">النوع</th>
+                  <th className="text-start px-3 py-3 font-medium text-gray-600">اللون</th>
+                  <th className="text-start px-3 py-3 font-medium text-gray-600">السعر</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">الكمية</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">الوصف</th>
                   {isManager && <th className="py-3 pe-3 w-12" />}
@@ -153,6 +166,10 @@ export default function InventoryList() {
                         <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${badge.className}`}>
                           {badge.text}
                         </span>
+                      </td>
+                      <td className="px-3 py-3.5 text-gray-700">{p.color ?? "—"}</td>
+                      <td className="px-3 py-3.5 text-brand-700 font-medium">
+                        {p.price != null ? formatMoney(p.price) : "—"}
                       </td>
                       <td className={`px-3 py-3.5 ${quantityColor(p.quantity)}`}>{p.quantity}</td>
                       <td className="px-3 py-3.5 text-gray-500 truncate max-w-xs">{p.description ?? "—"}</td>
