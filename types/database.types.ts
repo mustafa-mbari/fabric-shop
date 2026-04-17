@@ -39,6 +39,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      customers: {
+        Row: {
+          address: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          name: string
+          phone: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name: string
+          phone: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name?: string
+          phone?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string
@@ -71,6 +98,33 @@ export type Database = {
       }
     }
     Views: {
+      customers_active: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          deleted_at: string | null
+          id: string | null
+          name: string | null
+          phone: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string | null
+          name?: string | null
+          phone?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string | null
+          name?: string | null
+          phone?: string | null
+        }
+        Relationships: []
+      }
       users_active: {
         Row: {
           created_at: string | null

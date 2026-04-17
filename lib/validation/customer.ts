@@ -1,0 +1,12 @@
+import { z } from "zod";
+
+export const customerCreateSchema = z.object({
+  name:    z.string().min(1, "الاسم مطلوب").max(200),
+  phone:   z.string().min(1, "رقم الهاتف مطلوب").max(30),
+  address: z.string().max(500).optional(),
+});
+
+export const customerUpdateSchema = customerCreateSchema.partial();
+
+export type CustomerCreate = z.infer<typeof customerCreateSchema>;
+export type CustomerUpdate = z.infer<typeof customerUpdateSchema>;
