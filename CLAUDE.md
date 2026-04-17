@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for Claude Code when working in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project
 
@@ -9,61 +9,99 @@ Guidance for Claude Code when working in this repository.
 - Product spec: [PRD.md](PRD.md)
 - Implementation plan: [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
 
-The repo is in the planning/scaffolding phase. Treat `IMPLEMENTATION_PLAN.md` as the authoritative source for architecture decisions, phase order, and conventions.
+All major modules are implemented. Treat `IMPLEMENTATION_PLAN.md` as the authoritative source for architecture decisions and conventions.
+
+## Commands
+
+```bash
+npm run dev          # local dev server (Next.js)
+npm run build        # production build
+npm run start        # production server
+npm run lint         # ESLint
+npm run typecheck    # tsc --noEmit
+
+supabase start       # start local Supabase stack
+supabase db reset    # reset + re-apply all migrations
+supabase db push     # push migrations to remote
+```
 
 ## Tech stack
 
-- **Framework:** Next.js (App Router, TypeScript)
-- **Styling:** Tailwind CSS (logical properties for RTL)
+- **Framework:** Next.js 15 (App Router, TypeScript)
+- **Styling:** Tailwind CSS with logical properties for RTL
+- **Font:** Cairo (Google Fonts via `next/font/google`, Arabic + Latin subsets)
 - **Database & Auth:** Supabase (Postgres + RLS + Supabase Auth)
-- **Server data:** TanStack React Query
+- **Server data:** TanStack React Query v5
 - **Forms:** React Hook Form + Zod
-- **PDF:** pdfmake or `@react-pdf/renderer` with embedded Arabic font
-
-## Non-negotiables
-
-1. **Arabic + RTL only.** `<html dir="rtl" lang="ar">`. Use Tailwind logical properties (`ms-*`, `me-*`, `ps-*`, `pe-*`) — never `ml/mr`.
-2. **Mobile-first.** Design at 375px first; bottom nav on mobile, side nav on `md+`. Build one responsive component per list (cards on mobile → table on `md+`).
-3. **Derived values live in the database.**
-   - `orders.total_price`, `debts.amount_paid` updated by triggers.
-   - `order_items.total_price`, `debts.remaining` are GENERATED columns.
-   - The UI never persists computed totals — it reads them back from the DB.
-4. **Currency is Iraqi Dinar (IQD), no cents, smallest denomination 250.**
-   - Store all money as `bigint` (whole IQD). Never `numeric`, `float`, `double`, or `decimal`.
-   - Every money column: `CHECK (col >= 0 AND col % 250 = 0)`.
-   - Zod: `z.number().int().nonnegative().multipleOf(250)`.
-   - Inputs: `<input type="number" step="250" inputMode="numeric">`.
-   - Display via `lib/utils/money.ts` using `Intl.NumberFormat('ar-IQ', { style: 'currency', currency: 'IQD', maximumFractionDigits: 0 })` → e.g. `١٢٣٬٠٠٠ د.ع`.
-   - Never round silently — reject non-multiples of 250 with an Arabic error message.
-5. **Soft delete only.** Every soft-deletable table has `deleted_at`. Reads go through `*_active` views. RLS denies hard `DELETE` to all clients.
-6. **Role enforcement is server-side.** UI hiding a button is cosmetic. Every mutating Route Handler calls `requireRole()` where needed. Manager-only: product writes and all deletes.
-7. **Transactional writes** (e.g. order + items) go through Supabase RPCs, not multiple client calls.
-8. **Server always re-validates with Zod** — never trust client-side validation.
-9. **Phone uniqueness** uses a **partial** unique index `WHERE deleted_at IS NULL` so phones can be reused after soft delete.
+- **PDF:** `@react-pdf/renderer` (not pdfmake)
 
 ## Architecture shape
 
-- Next.js hosts both UI (App Router pages) and API (Route Handlers under `app/api/`).
-- Reads use the Supabase JS client (anon key, protected by RLS).
-- Writes go through Route Handlers: parse → Zod validate → `requireRole` if needed → service-role client → DB.
-- Session is refreshed in `middleware.ts`; `(dashboard)` routes are gated there.
+- Next.js App Router: UI in `app/(auth)/` and `app/(dashboard)/`, API in `app/api/`.
+- **Reads:** Supabase JS client (anon key, protected by RLS) called from React Query hooks in `hooks/`.
+- **Writes:** Route Handlers under `app/api/` — parse body → Zod validate → `requireRole()` if needed → `adminClient` (service role) → DB.
+- Session is refreshed in `middleware.ts`; `app/(dashboard)/layout.tsx` redirects to `/login` if no session.
+- `QueryProvider` wraps the entire app at `app/layout.tsx`.
+
+### Route Handler pattern
+
+```ts
+// parse → validate → auth → write
+const body = await request.json().catch(() => null);
+const parsed = mySchema.safeParse(body);
+if (!parsed.success) return NextResponse.json({ error: "..." }, { status: 400 });
+try { await requireRole("manager"); } catch (res) { return res as Response; }
+const { data, error } = await adminClient.from("...").insert(parsed.data).select().single();
+```
+
+### React Query hook pattern
+
+Hooks in `hooks/` are `"use client"` files that call `/api/` endpoints. They own the `queryKey` and invalidation logic. Pages import hooks, not Supabase directly.
 
 ## Folder conventions
 
 ```
-app/(auth)/        login + auth layout
-app/(dashboard)/   protected pages (customers, debts, orders, inventory, tasks)
-app/api/           REST Route Handlers — one folder per resource
-components/        ui/, forms/, tables/, layout/, dashboard/
-lib/supabase/      client.ts (browser), server.ts (cookies), admin.ts (service role)
-lib/auth/          getSession, requireRole
-lib/validation/    Zod schemas — one per resource per action, shared with forms
-lib/pdf/           Arabic-capable PDF builders
-hooks/             React Query hooks per resource
-supabase/migrations/  ordered SQL migrations
+app/(auth)/           login, register, pending-approval
+app/(dashboard)/      protected pages — one folder per module
+app/api/              Route Handlers — one folder per resource
+components/
+  forms/              shared form components (CustomerPicker, OrderForm, etc.)
+  layout/             AppShell, BottomNav, SideNav, TopBar
+  ui/                 Skeleton, ErrorBoundary, ActionMenu
+  providers/          QueryProvider
+hooks/                React Query hooks — one file per resource
+lib/
+  auth/               getSession.ts, requireRole.ts
+  supabase/           client.ts (browser), server.ts (SSR), admin.ts (service role)
+  utils/              money.ts
+  validation/         Zod schemas — one file per resource
+  pdf/                OrderPDF.tsx, DebtsPDF.tsx, fonts.ts
+supabase/migrations/  SQL migrations — numbered sequentially
+types/                database.types.ts (generated by Supabase CLI)
 ```
 
-**Naming:** kebab-case routes, PascalCase components, camelCase hooks/utilities, snake_case DB tables/columns (plural table names).
+**Naming:** kebab-case routes, PascalCase components, camelCase hooks/utils, snake_case DB columns (plural table names).
+
+## Non-negotiables
+
+1. **Arabic + RTL only.** `<html dir="rtl" lang="ar">`. Use Tailwind logical properties (`ms-*`, `me-*`, `ps-*`, `pe-*`) — never `ml/mr`.
+2. **Mobile-first.** Design at 375px first; bottom nav on mobile, side nav on `md+`. Cards on mobile → table on `md+` in the same component.
+3. **Derived values live in the database.**
+   - `orders.total_price` and `debts.amount_paid` are updated by DB triggers.
+   - `order_items.total_price` and `debts.remaining` are GENERATED columns.
+   - The UI never persists computed totals — it reads them back from the DB.
+4. **Currency is Iraqi Dinar (IQD), no cents, smallest denomination 250.**
+   - Store as `bigint` (whole IQD). Never `numeric`, `float`, or `decimal`.
+   - Every money column: `CHECK (col >= 0 AND col % 250 = 0)`.
+   - Zod: `z.number().int().nonnegative().multipleOf(250)`.
+   - Inputs: `<input type="number" step="250" inputMode="numeric">`.
+   - Display via `lib/utils/money.ts` → `formatMoney(amount)` → e.g. `١٢٣٬٠٠٠ د.ع`.
+   - Never round silently — reject non-multiples of 250 with an Arabic error message.
+5. **Soft delete only.** Every soft-deletable table has `deleted_at`. There are no `*_active` views (dropped in migration 0007) — filter inline with `.is("deleted_at", null)`. RLS denies hard `DELETE` to all clients.
+6. **Role enforcement is server-side.** UI hiding a button is cosmetic. Every mutating Route Handler calls `requireRole()` where needed. Manager-only: product writes, all deletes.
+7. **Transactional writes** (e.g. order + items) go through Supabase RPCs, not multiple client calls.
+8. **Server always re-validates with Zod** — never trust client-side validation alone.
+9. **Phone uniqueness** uses a partial unique index `WHERE deleted_at IS NULL`.
 
 ## Data model summary
 
@@ -71,43 +109,34 @@ Tables: `users`, `customers`, `products`, `orders`, `order_items`, `debts`, `pay
 
 Key relationships:
 - `orders.customer_id` → `customers` (nullable; `customer_name` is fallback).
-- `order_items.order_id` → `orders` (cascade delete).
+- `order_items.order_id` → `orders` (cascade delete). `product_name` is a snapshot string, **not** a FK.
 - `debts.customer_id` → `customers` (required); `debts.order_id` → `orders` (optional).
 - `payments.debt_id` → `debts` (cascade delete).
 - `tasks.assigned_to`, `tasks.created_by` → `users`.
 
-Enums: `orders.status` = `NEW | IN_PROGRESS | ON_HOLD | READY | DELIVERED`; `debts.type` = `WHOLESALE | RETAIL`; `products.type` = `METER | UNIT`; `users.role` = `worker | manager`.
+Enums:
+- `orders.status`: `NEW | IN_PROGRESS | ON_HOLD | READY | DELIVERED`
+- `debts.type`: `WHOLESALE | RETAIL`
+- `products.type`: `METER | UNIT`
+- `users.role`: `worker | manager | super_admin`
+- `users.status`: `pending | active | suspended`
 
-Products are loose strings per PRD (name includes color, e.g. "Cotton Fabric - Red"). `order_items.product_name` is a snapshot, **not** a foreign key — orders must not break if a product is later renamed or deleted.
+`products` table has `name`, `type`, `color` (nullable), and `price` (bigint, IQD) columns (added in migrations 0005, 0012).
 
-## Build order
+## Roles
 
-Follow [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) §4. Do not reorder without updating the plan.
+Three roles exist: `worker`, `manager`, `super_admin` (added migration 0011).
 
-```
-Foundation → Customers ─┬→ Orders ─┐
-                        └→ Debts ──┤
-              Inventory ───────────┤→ Dashboard → PDF Export → Polish
-              Tasks ───────────────┘
-```
+- **Server-side** (`requireRole.ts`): reads from the `users` table via the server Supabase client. Hierarchy: worker < manager < super_admin.
+- **Client-side** (`hooks/useRole.ts`): reads `user_metadata.role` from the Supabase auth user object. Used only for UI gating — never for security decisions.
 
 ## Working rules for Claude
 
 - **Read [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) first** whenever touching architecture, migrations, or a new module.
-- **Never** bypass Zod validation on Route Handlers, even "just this once."
-- **Never** compute `remaining` or `total_price` in client code for persistence — read it back from the DB.
+- **Never** bypass Zod validation on Route Handlers.
+- **Never** compute `remaining` or `total_price` in client code for persistence — read them back from the DB.
 - **Never** use `ml-*`/`mr-*` Tailwind classes — always logical (`ms-*`/`me-*`).
-- **Never** expose the service-role key to the client.
-- One migration file per phase in `supabase/migrations/`, named sequentially.
+- **Never** expose the service-role key to the client (`adminClient` is server-only).
+- One migration file per schema change in `supabase/migrations/`, named sequentially (next: `0013_...`).
 - When adding a new API route, re-use or extend an existing Zod schema in `lib/validation/` before creating a new one.
-- Don't add features outside the PRD (notifications, deadlines, variants, auto stock deduction) — capture requests in a backlog instead.
-- Don't add comments that just describe what the code does; only add comments for non-obvious *why*.
-
-## Commands
-
-Commands will be added to this section once the Next.js project is scaffolded (Phase 0 of the plan). Expected:
-
-- `npm run dev` — local dev server
-- `npm run build` / `npm run start` — production build
-- `npm run lint` / `npm run typecheck`
-- `supabase start` / `supabase db reset` / `supabase db push` — local DB workflow
+- Don't add features outside the PRD (notifications, deadlines, variants, auto stock deduction).
