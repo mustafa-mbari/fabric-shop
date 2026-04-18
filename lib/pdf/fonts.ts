@@ -7,14 +7,14 @@ Font.register({
     {
       src: path.join(
         process.cwd(),
-        "node_modules/@fontsource/cairo/files/cairo-arabic-400-normal.woff2"
+        "node_modules/@fontsource/cairo/files/cairo-arabic-400-normal.woff"
       ),
       fontWeight: 400,
     },
     {
       src: path.join(
         process.cwd(),
-        "node_modules/@fontsource/cairo/files/cairo-arabic-700-normal.woff2"
+        "node_modules/@fontsource/cairo/files/cairo-arabic-700-normal.woff"
       ),
       fontWeight: 700,
     },

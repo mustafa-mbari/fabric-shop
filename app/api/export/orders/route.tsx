@@ -30,7 +30,13 @@ export async function GET(request: NextRequest) {
   if (!result.data)
     return NextResponse.json({ error: "الطلب غير موجود" }, { status: 404 });
 
-  const buf = await renderToBuffer(<OrderPDF order={result.data} />);
+  let buf: Buffer;
+  try {
+    buf = await renderToBuffer(<OrderPDF order={result.data} />);
+  } catch (err) {
+    console.error("[PDF] renderToBuffer failed:", err);
+    return NextResponse.json({ error: "فشل إنشاء الملف" }, { status: 500 });
+  }
 
   return new Response(new Uint8Array(buf), {
     headers: {

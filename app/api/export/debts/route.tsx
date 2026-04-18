@@ -52,12 +52,18 @@ export async function GET(request: NextRequest) {
     .order("created_at", { ascending: false });
   const debtsResult = rawDebts as unknown as { data: DebtRow[] | null; error: unknown };
 
-  const buf = await renderToBuffer(
-    <DebtsPDF
-      customer={customerResult.data}
-      debts={debtsResult.data ?? []}
-    />
-  );
+  let buf: Buffer;
+  try {
+    buf = await renderToBuffer(
+      <DebtsPDF
+        customer={customerResult.data}
+        debts={debtsResult.data ?? []}
+      />
+    );
+  } catch (err) {
+    console.error("[PDF] renderToBuffer failed:", err);
+    return NextResponse.json({ error: "فشل إنشاء الملف" }, { status: 500 });
+  }
 
   const safeName = customerResult.data.name.replace(/\s+/g, "-").slice(0, 20);
   return new Response(new Uint8Array(buf), {
