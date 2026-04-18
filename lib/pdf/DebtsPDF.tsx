@@ -141,7 +141,7 @@ export default function DebtsPDF({
           </View>
           <View>
             <Text style={s.customerLabel}>الهاتف</Text>
-            <Text style={s.customerValue}>{customer.phone}</Text>
+            <Text style={s.customerValue}>{customer.phone ?? "—"}</Text>
           </View>
           <View>
             <Text style={s.customerLabel}>التاريخ</Text>

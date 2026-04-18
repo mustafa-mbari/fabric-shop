@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useDebts, useDeleteDebt, type DebtRow } from "@/hooks/useDebts";
 import { useRole } from "@/hooks/useRole";
 import { formatMoney } from "@/lib/utils/money";
@@ -26,8 +26,10 @@ interface Props {
 
 export default function DebtsList({ type }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const search = searchParams.get("search") ?? undefined;
   const { isManager } = useRole();
-  const { data: debts, isLoading, isError } = useDebts(type);
+  const { data: debts, isLoading, isError } = useDebts(type, undefined, search);
   const { mutateAsync: deleteDebt } = useDeleteDebt();
   const totalRemaining = debts?.reduce((s, d) => s + d.remaining, 0) ?? 0;
 

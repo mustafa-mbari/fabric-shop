@@ -6,7 +6,7 @@ import { customerCreateSchema } from "@/lib/validation/customer";
 type CustomerRow = {
   id: string;
   name: string;
-  phone: string;
+  phone: string | null;
   address: string | null;
   created_at: string;
   deleted_at: string | null;
@@ -46,7 +46,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "بيانات غير صالحة", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const raw = await adminClient.from("customers").insert(parsed.data).select().single();
+  const insertData = {
+    ...parsed.data,
+    phone: parsed.data.phone ?? null,
+  };
+
+  const raw = await adminClient.from("customers").insert(insertData as never).select().single();
   const result = raw as unknown as { data: CustomerRow | null; error: { code?: string } | null };
 
   if (result.error) {

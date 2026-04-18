@@ -15,7 +15,7 @@ export type DebtRow = {
   order_id: string | null;
   created_by: string;
   created_at: string;
-  customers: { name: string; phone: string } | null;
+  customers: { name: string; phone: string | null } | null;
 };
 
 export async function GET(request: NextRequest) {
@@ -26,6 +26,19 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const type       = searchParams.get("type");
   const customerId = searchParams.get("customer_id");
+  const search     = searchParams.get("search")?.trim();
+
+  // When searching by customer name, resolve to customer IDs first
+  let customerIds: string[] | null = null;
+  if (search) {
+    const { data: matched } = await adminClient
+      .from("customers")
+      .select("id")
+      .ilike("name", `%${search}%`)
+      .is("deleted_at", null);
+    customerIds = matched?.map((c: { id: string }) => c.id) ?? [];
+    if (customerIds.length === 0) return NextResponse.json({ data: [] });
+  }
 
   let query = supabase
     .from("debts")
@@ -33,8 +46,9 @@ export async function GET(request: NextRequest) {
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
-  if (type)       query = query.eq("type", type);
-  if (customerId) query = query.eq("customer_id", customerId);
+  if (type)                       query = query.eq("type", type);
+  if (customerId)                  query = query.eq("customer_id", customerId);
+  if (customerIds !== null)        query = query.in("customer_id", customerIds);
 
   const raw = await query;
   const result = raw as unknown as { data: DebtRow[] | null; error: unknown };

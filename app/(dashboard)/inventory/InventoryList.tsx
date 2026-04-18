@@ -20,9 +20,18 @@ function quantityColor(qty: number) {
   return "text-green-700 font-semibold";
 }
 
+type TypeFilter = "ALL" | "METER" | "UNIT";
+
+const TYPE_FILTERS: { value: TypeFilter; label: string }[] = [
+  { value: "ALL",   label: "الكل" },
+  { value: "METER", label: "متر" },
+  { value: "UNIT",  label: "قطعة" },
+];
+
 export default function InventoryList() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const router = useRouter();
   const { isManager } = useRole();
 
@@ -31,7 +40,10 @@ export default function InventoryList() {
     return () => clearTimeout(t);
   }, [search]);
 
-  const { data: products, isLoading, isError } = useProducts(debouncedSearch);
+  const { data: products, isLoading, isError } = useProducts(
+    debouncedSearch,
+    typeFilter === "ALL" ? undefined : typeFilter,
+  );
   const { mutateAsync: deleteProduct } = useDeleteProduct();
 
   function menuItems(id: string) {
@@ -76,6 +88,24 @@ export default function InventoryList() {
         )}
       </div>
 
+      {/* Type filter chips */}
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-0.5">
+        {TYPE_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            onClick={() => setTypeFilter(f.value)}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors
+              ${typeFilter === f.value
+                ? "bg-brand-600 text-white"
+                : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} />)}
@@ -91,8 +121,8 @@ export default function InventoryList() {
       {!isLoading && !isError && products?.length === 0 && (
         <div className="text-center py-16 text-gray-400">
           <p className="text-4xl mb-3">📦</p>
-          <p className="text-sm">{search ? "لا توجد نتائج مطابقة" : "لا يوجد منتجات في المخزون"}</p>
-          {!search && isManager && (
+          <p className="text-sm">{(search || typeFilter !== "ALL") ? "لا توجد نتائج مطابقة" : "لا يوجد منتجات في المخزون"}</p>
+          {!search && typeFilter === "ALL" && isManager && (
             <Link href="/inventory/new" className="mt-4 inline-block text-sm text-brand-600 font-medium hover:underline">
               أضف أول منتج
             </Link>

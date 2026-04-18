@@ -6,7 +6,7 @@ import type { CustomerCreate, CustomerUpdate } from "@/lib/validation/customer";
 export type CustomerRow = {
   id: string;
   name: string;
-  phone: string;
+  phone: string | null;
   address: string | null;
   note: string | null;
   created_at: string;

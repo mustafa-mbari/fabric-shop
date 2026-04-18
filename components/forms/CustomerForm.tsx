@@ -45,7 +45,7 @@ export default function CustomerForm({ defaultValues, onSubmit, submitLabel, loa
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          رقم الهاتف <span className="text-red-500">*</span>
+          رقم الهاتف <span className="text-gray-400 font-normal text-xs">(اختياري)</span>
         </label>
         <input
           {...register("phone")}

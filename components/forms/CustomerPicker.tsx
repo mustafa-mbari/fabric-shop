@@ -29,6 +29,17 @@ export default function CustomerPicker({ value, onChange, error }: Props) {
     formState: { errors: formErrors },
   } = useForm<CustomerCreate>({ resolver: zodResolver(customerCreateSchema) });
 
+  async function handleQuickAdd(name: string) {
+    setCreateError(null);
+    try {
+      const created = await createCustomer({ name });
+      onChange(created);
+      setOpen(false);
+    } catch (e) {
+      setCreateError(e instanceof Error ? e.message : "فشل إنشاء العميل");
+    }
+  }
+
   useEffect(() => {
     if (!open) {
       setSearch("");
@@ -71,7 +82,7 @@ export default function CustomerPicker({ value, onChange, error }: Props) {
         {value ? (
           <span className="flex items-center justify-between">
             <span className="font-medium text-gray-900">{value.name}</span>
-            <span className="text-gray-400 text-xs" dir="ltr">{value.phone}</span>
+            <span className="text-gray-400 text-xs" dir="ltr">{value.phone ?? "—"}</span>
           </span>
         ) : (
           <span className="text-gray-400">اختر عميلاً...</span>
@@ -117,8 +128,25 @@ export default function CustomerPicker({ value, onChange, error }: Props) {
                       <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                     </div>
                   )}
-                  {!isLoading && customers?.length === 0 && (
-                    <p className="text-center text-sm text-gray-400 py-8">لا توجد نتائج</p>
+                  {!isLoading && customers?.length === 0 && !search.trim() && (
+                    <p className="text-center text-sm text-gray-400 py-8">لا توجد عملاء</p>
+                  )}
+                  {!isLoading && customers?.length === 0 && search.trim() && (
+                    <div className="py-6 px-5 flex flex-col items-center gap-3">
+                      <p className="text-sm text-gray-400">لا توجد نتائج لـ &ldquo;{search}&rdquo;</p>
+                      {createError && (
+                        <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2 w-full text-center">{createError}</p>
+                      )}
+                      <button
+                        type="button"
+                        disabled={creating}
+                        onClick={() => handleQuickAdd(search.trim())}
+                        className="w-full rounded-xl py-3 text-sm font-semibold text-white disabled:opacity-60"
+                        style={{ background: "linear-gradient(135deg, #0284c7, #0369a1)" }}
+                      >
+                        {creating ? "..." : `+ إضافة "${search}" كعميل جديد`}
+                      </button>
+                    </div>
                   )}
                   {customers?.map((c) => (
                     <button
@@ -128,7 +156,7 @@ export default function CustomerPicker({ value, onChange, error }: Props) {
                       className="w-full text-start px-5 py-3.5 hover:bg-gray-50 transition-colors"
                     >
                       <p className="font-medium text-gray-900">{c.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5" dir="ltr">{c.phone}</p>
+                      {c.phone && <p className="text-xs text-gray-400 mt-0.5" dir="ltr">{c.phone}</p>}
                     </button>
                   ))}
                 </div>
@@ -164,7 +192,7 @@ export default function CustomerPicker({ value, onChange, error }: Props) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    رقم الهاتف <span className="text-red-500">*</span>
+                    رقم الهاتف <span className="text-gray-400 text-xs font-normal">(اختياري)</span>
                   </label>
                   <input
                     {...register("phone")}

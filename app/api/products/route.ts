@@ -21,12 +21,13 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
-  const search = request.nextUrl.searchParams.get("search") ?? "";
+  const { searchParams } = request.nextUrl;
+  const search = searchParams.get("search") ?? "";
+  const type   = searchParams.get("type");
 
   let query = supabase.from("products").select("*").is("deleted_at", null).order("name");
-  if (search.trim()) {
-    query = query.ilike("name", `%${search}%`);
-  }
+  if (search.trim()) query = query.ilike("name", `%${search}%`);
+  if (type === "METER" || type === "UNIT") query = query.eq("type", type);
 
   const raw = await query;
   const result = raw as unknown as { data: ProductRow[] | null; error: unknown };

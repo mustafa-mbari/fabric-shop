@@ -69,7 +69,7 @@ export default function CustomerDetail({ id }: { id: string }) {
         <CustomerForm
           defaultValues={{
             name:    customer.name,
-            phone:   customer.phone,
+            phone:   customer.phone ?? undefined,
             address: customer.address ?? undefined,
             note:    customer.note ?? undefined,
           }}

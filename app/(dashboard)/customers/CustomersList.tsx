@@ -108,7 +108,7 @@ export default function CustomersList() {
                   <p className="font-semibold text-gray-900 truncate">{c.name}</p>
                   <p className="flex items-center gap-1.5 text-sm text-gray-500 mt-1" dir="ltr">
                     <PhoneIcon />
-                    {c.phone}
+                    {c.phone ?? "—"}
                   </p>
                   {c.address && (
                     <p className="text-xs text-gray-400 mt-0.5 truncate">{c.address}</p>
@@ -140,7 +140,7 @@ export default function CustomersList() {
                 {customers.map((c) => (
                   <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                     <td className="ps-5 pe-3 py-3.5 font-medium text-gray-900">{c.name}</td>
-                    <td className="px-3 py-3.5 text-gray-600" dir="ltr">{c.phone}</td>
+                    <td className="px-3 py-3.5 text-gray-600" dir="ltr">{c.phone ?? "—"}</td>
                     <td className="px-3 py-3.5 text-gray-500">{c.address ?? "—"}</td>
                     <td className="px-3 py-3.5 text-gray-500 max-w-xs truncate">{c.note ?? "—"}</td>
                     <td className="pe-3 py-3.5 text-end">

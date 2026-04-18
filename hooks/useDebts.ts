@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { DebtCreate, DebtUpdate, PaymentCreate } from "@/lib/validation/debt";
+import type { DebtCreate, DebtUpdate, DebtAddAmount, PaymentCreate } from "@/lib/validation/debt";
 
 export type DebtRow = {
   id: string;
@@ -13,7 +13,7 @@ export type DebtRow = {
   note: string | null;
   order_id: string | null;
   created_at: string;
-  customers: { name: string; phone: string } | null;
+  customers: { name: string; phone: string | null } | null;
 };
 
 export type PaymentRow = {
@@ -24,12 +24,13 @@ export type PaymentRow = {
   created_at: string;
 };
 
-export function useDebts(type: "WHOLESALE" | "RETAIL", customerId?: string) {
+export function useDebts(type: "WHOLESALE" | "RETAIL", customerId?: string, search?: string) {
   const params = new URLSearchParams({ type });
   if (customerId) params.set("customer_id", customerId);
+  if (search?.trim()) params.set("search", search.trim());
 
   return useQuery({
-    queryKey: ["debts", type, customerId ?? ""],
+    queryKey: ["debts", type, customerId ?? "", search ?? ""],
     queryFn: async () => {
       const res = await fetch(`/api/debts?${params}`);
       if (!res.ok) throw new Error("فشل تحميل الديون");
@@ -128,6 +129,25 @@ export function useDeleteDebt() {
       if (!res.ok) throw new Error(json.error ?? "فشل الحذف");
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["debts"] }),
+  });
+}
+
+export function useAddDebtAmount(debtId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: DebtAddAmount) => {
+      const res = await fetch(`/api/debts/${debtId}/add-amount`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "فشل تحديث الدين");
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["debt", debtId] });
+      qc.invalidateQueries({ queryKey: ["debts"] });
+    },
   });
 }
 

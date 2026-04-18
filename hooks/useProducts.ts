@@ -14,20 +14,21 @@ export type ProductRow = {
   created_at: string;
 };
 
-async function fetchProducts(search?: string): Promise<ProductRow[]> {
-  const url = search?.trim()
-    ? `/api/products?search=${encodeURIComponent(search)}`
-    : "/api/products";
+async function fetchProducts(search?: string, type?: "METER" | "UNIT"): Promise<ProductRow[]> {
+  const params = new URLSearchParams();
+  if (search?.trim()) params.set("search", search.trim());
+  if (type)           params.set("type", type);
+  const url = params.size ? `/api/products?${params}` : "/api/products";
   const res = await fetch(url);
   if (!res.ok) throw new Error("فشل تحميل المنتجات");
   const json = await res.json();
   return json.data as ProductRow[];
 }
 
-export function useProducts(search?: string) {
+export function useProducts(search?: string, type?: "METER" | "UNIT") {
   return useQuery({
-    queryKey: ["products", search ?? ""],
-    queryFn: () => fetchProducts(search),
+    queryKey: ["products", search ?? "", type ?? ""],
+    queryFn: () => fetchProducts(search, type),
     staleTime: 30_000,
   });
 }

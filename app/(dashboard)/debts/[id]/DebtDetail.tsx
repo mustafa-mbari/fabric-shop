@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useDebt, usePayments, useAddPayment, useDeletePayment, useDeleteDebt } from "@/hooks/useDebts";
+import { useDebt, usePayments, useAddPayment, useDeletePayment, useDeleteDebt, useAddDebtAmount } from "@/hooks/useDebts";
 import { useRole } from "@/hooks/useRole";
 import { formatMoney } from "@/lib/utils/money";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { paymentCreateSchema, type PaymentCreate } from "@/lib/validation/debt";
+import { paymentCreateSchema, debtAddAmountSchema, type PaymentCreate, type DebtAddAmount } from "@/lib/validation/debt";
 
 const typeLabel: Record<string, string> = { WHOLESALE: "بالجملة", RETAIL: "بالمفرد" };
 
@@ -116,15 +116,113 @@ function AddPaymentSheet({
   );
 }
 
+function AddAmountSheet({
+  debtId,
+  onClose,
+}: {
+  debtId: string;
+  onClose: () => void;
+}) {
+  const { mutateAsync: addAmount, isPending } = useAddDebtAmount(debtId);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<DebtAddAmount>({
+    resolver: zodResolver(debtAddAmountSchema),
+  });
+
+  useEffect(() => {
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [onClose]);
+
+  async function onSubmit(data: DebtAddAmount) {
+    setServerError(null);
+    try {
+      await addAmount(data);
+      onClose();
+    } catch (e) {
+      setServerError(e instanceof Error ? e.message : "فشل تحديث الدين");
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center" role="dialog" aria-modal="true" aria-label="إضافة مبلغ للدين">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white w-full md:w-[420px] md:rounded-2xl rounded-t-2xl p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-semibold text-gray-900">إضافة مبلغ للدين</h3>
+          <button onClick={onClose} aria-label="إغلاق" className="text-gray-400 hover:text-gray-600 p-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300">✕</button>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              المبلغ الإضافي (د.ع) <span className="text-red-500">*</span>
+            </label>
+            <input
+              {...register("amount", { valueAsNumber: true })}
+              type="number"
+              inputMode="numeric"
+              min={250}
+              step={250}
+              autoFocus
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3
+                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white"
+              placeholder="مثال: 25000"
+            />
+            {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              ملاحظة <span className="text-gray-400 font-normal text-xs">(اختياري)</span>
+            </label>
+            <input
+              {...register("note")}
+              type="text"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3
+                         focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white"
+              placeholder="..."
+            />
+          </div>
+
+          {serverError && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2">{serverError}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isPending}
+            className="w-full rounded-xl py-3 text-base font-semibold text-white
+                       min-h-[48px] disabled:opacity-60"
+            style={{ background: "linear-gradient(135deg, #0284c7, #0369a1)" }}
+          >
+            {isPending ? "جارٍ الحفظ..." : "إضافة للدين"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function DebtDetail({ id }: { id: string }) {
   const router = useRouter();
   const { data: debt, isLoading } = useDebt(id);
   const { data: payments } = usePayments(id);
   const { mutateAsync: deleteDebt } = useDeleteDebt();
-  const { mutateAsync: deletePayment } = useDeletePayment(id);
+  const { mutateAsync: deletePayment, isPending: deletingPayment } = useDeletePayment(id);
   const { isManager } = useRole();
 
   const [showPaymentSheet, setShowPaymentSheet] = useState(false);
+  const [showAddAmountSheet, setShowAddAmountSheet] = useState(false);
+  const [confirmPaymentId, setConfirmPaymentId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -231,6 +329,14 @@ export default function DebtDetail({ id }: { id: string }) {
               + تسجيل دفعة
             </button>
           )}
+          {isManager && (
+            <button
+              onClick={() => setShowAddAmountSheet(true)}
+              className="flex-1 rounded-xl py-3 text-base font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50"
+            >
+              + إضافة دين
+            </button>
+          )}
           <a
             href={`/api/export/debts?customer_id=${debt.customer_id}`}
             target="_blank"
@@ -260,12 +366,30 @@ export default function DebtDetail({ id }: { id: string }) {
                     {p.note && <p className="text-xs text-gray-500 truncate">{p.note}</p>}
                   </div>
                   {isManager && (
-                    <button
-                      onClick={() => handleDeletePayment(p.id)}
-                      className="shrink-0 text-xs text-red-400 hover:text-red-600 px-2 py-1"
-                    >
-                      حذف
-                    </button>
+                    confirmPaymentId === p.id ? (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => { handleDeletePayment(p.id); setConfirmPaymentId(null); }}
+                          disabled={deletingPayment}
+                          className="text-xs text-white bg-red-500 hover:bg-red-600 rounded-lg px-2.5 py-1 disabled:opacity-60"
+                        >
+                          {deletingPayment ? "..." : "تأكيد"}
+                        </button>
+                        <button
+                          onClick={() => setConfirmPaymentId(null)}
+                          className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg px-2.5 py-1"
+                        >
+                          إلغاء
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmPaymentId(p.id)}
+                        className="shrink-0 text-xs text-red-400 hover:text-red-600 px-2 py-1"
+                      >
+                        حذف
+                      </button>
+                    )
                   )}
                 </div>
               ))}
@@ -314,6 +438,12 @@ export default function DebtDetail({ id }: { id: string }) {
           debtId={id}
           maxAmount={debt.remaining}
           onClose={() => setShowPaymentSheet(false)}
+        />
+      )}
+      {showAddAmountSheet && (
+        <AddAmountSheet
+          debtId={id}
+          onClose={() => setShowAddAmountSheet(false)}
         />
       )}
     </>
