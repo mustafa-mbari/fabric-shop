@@ -21,6 +21,14 @@ function quantityColor(qty: number) {
 }
 
 type MeasureFilter = "ALL" | "METER" | "UNIT";
+type FilterField   = "name" | "productType" | "color" | "measure";
+
+const FIELD_OPTIONS: { value: FilterField; label: string; placeholder?: string }[] = [
+  { value: "name",        label: "اسم المنتج",  placeholder: "ابحث باسم المنتج..." },
+  { value: "productType", label: "نوع المنتج",  placeholder: "مثال: قطن، حرير..." },
+  { value: "color",       label: "اللون",        placeholder: "مثال: أحمر، أزرق..." },
+  { value: "measure",     label: "نوع القياس" },
+];
 
 const MEASURE_FILTERS: { value: MeasureFilter; label: string }[] = [
   { value: "ALL",   label: "الكل" },
@@ -28,42 +36,37 @@ const MEASURE_FILTERS: { value: MeasureFilter; label: string }[] = [
   { value: "UNIT",  label: "قطعة" },
 ];
 
-interface Filters {
-  name: string;
-  productType: string;
-  color: string;
-  measure: MeasureFilter;
-}
-
 export default function InventoryList() {
-  const [filters, setFilters] = useState<Filters>({ name: "", productType: "", color: "", measure: "ALL" });
-  const [debounced, setDebounced] = useState(filters);
+  const [filterField,   setFilterFieldState] = useState<FilterField>("name");
+  const [filterText,    setFilterText]        = useState("");
+  const [measureValue,  setMeasureValue]      = useState<MeasureFilter>("ALL");
+  const [debouncedText, setDebouncedText]     = useState("");
   const router = useRouter();
   const { isManager } = useRole();
 
-  // Single debounce for all text filters
   useEffect(() => {
-    const t = setTimeout(() => setDebounced(filters), 300);
+    const t = setTimeout(() => setDebouncedText(filterText), 300);
     return () => clearTimeout(t);
-  }, [filters]);
+  }, [filterText]);
 
-  const hasFilter = filters.name || filters.productType || filters.color || filters.measure !== "ALL";
+  function switchField(field: FilterField) {
+    setFilterFieldState(field);
+    setFilterText("");
+    setMeasureValue("ALL");
+    setDebouncedText("");
+  }
+
+  const hasFilter =
+    (filterField !== "measure" && debouncedText !== "") ||
+    (filterField === "measure" && measureValue !== "ALL");
 
   const { data: products, isLoading, isError } = useProducts({
-    search:      debounced.name || undefined,
-    type:        debounced.measure === "ALL" ? undefined : debounced.measure,
-    productType: debounced.productType || undefined,
-    color:       debounced.color || undefined,
+    search:      filterField === "name"        ? debouncedText || undefined : undefined,
+    productType: filterField === "productType" ? debouncedText || undefined : undefined,
+    color:       filterField === "color"       ? debouncedText || undefined : undefined,
+    type:        filterField === "measure"     ? (measureValue === "ALL" ? undefined : measureValue) : undefined,
   });
   const { mutateAsync: deleteProduct } = useDeleteProduct();
-
-  function setField<K extends keyof Filters>(key: K, value: Filters[K]) {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  }
-
-  function clearFilters() {
-    setFilters({ name: "", productType: "", color: "", measure: "ALL" });
-  }
 
   function menuItems(id: string) {
     return [
@@ -74,27 +77,69 @@ export default function InventoryList() {
     ];
   }
 
+  const activePlaceholder = FIELD_OPTIONS.find((f) => f.value === filterField)?.placeholder ?? "";
+
   return (
     <>
-      {/* Top row: name search + add button */}
-      <div className="flex gap-3 mb-3">
-        <div className="relative flex-1">
-          <span className="absolute inset-y-0 end-3 flex items-center pointer-events-none">
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0Z" />
-            </svg>
-          </span>
-          <input
-            type="search"
-            value={filters.name}
-            onChange={(e) => setField("name", e.target.value)}
-            placeholder="ابحث باسم المنتج..."
-            className="w-full rounded-xl border border-gray-200 bg-white pe-10 ps-4 py-2.5
-                       text-sm text-gray-900 placeholder:text-gray-400
-                       focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-          />
+      {/* Filter row: select + input/chips + add button */}
+      <div className="flex gap-2 mb-4 items-center">
+        {/* Field selector */}
+        <select
+          value={filterField}
+          onChange={(e) => switchField(e.target.value as FilterField)}
+          className="shrink-0 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm
+                     text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer"
+        >
+          {FIELD_OPTIONS.map((f) => (
+            <option key={f.value} value={f.value}>{f.label}</option>
+          ))}
+        </select>
+
+        {/* Value input — text or chips */}
+        <div className="flex-1">
+          {filterField !== "measure" ? (
+            <div className="relative">
+              <input
+                key={filterField}
+                type="search"
+                value={filterText}
+                onChange={(e) => setFilterText(e.target.value)}
+                placeholder={activePlaceholder}
+                autoFocus
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm
+                           placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              {filterText && (
+                <button
+                  type="button"
+                  onClick={() => { setFilterText(""); setDebouncedText(""); }}
+                  className="absolute inset-y-0 end-2 flex items-center px-1 text-gray-400 hover:text-gray-600"
+                  aria-label="مسح"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex gap-1.5">
+              {MEASURE_FILTERS.map((f) => (
+                <button
+                  key={f.value}
+                  type="button"
+                  onClick={() => setMeasureValue(f.value)}
+                  className={`flex-1 rounded-xl py-2.5 text-sm font-medium transition-colors border
+                    ${measureValue === f.value
+                      ? "bg-brand-600 text-white border-brand-600"
+                      : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+
         {isManager && (
           <Link
             href="/inventory/new"
@@ -104,53 +149,6 @@ export default function InventoryList() {
             <span className="text-lg leading-none">+</span>
             <span className="hidden sm:inline">منتج جديد</span>
           </Link>
-        )}
-      </div>
-
-      {/* Secondary filters: product type + color */}
-      <div className="grid grid-cols-2 gap-2 mb-3">
-        <input
-          type="search"
-          value={filters.productType}
-          onChange={(e) => setField("productType", e.target.value)}
-          placeholder="نوع المنتج..."
-          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm
-                     placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-        />
-        <input
-          type="search"
-          value={filters.color}
-          onChange={(e) => setField("color", e.target.value)}
-          placeholder="اللون..."
-          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm
-                     placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-        />
-      </div>
-
-      {/* Measurement type chips + clear */}
-      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-0.5">
-        {MEASURE_FILTERS.map((f) => (
-          <button
-            key={f.value}
-            type="button"
-            onClick={() => setField("measure", f.value)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors
-              ${filters.measure === f.value
-                ? "bg-brand-600 text-white"
-                : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}
-          >
-            {f.label}
-          </button>
-        ))}
-        {hasFilter && (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="shrink-0 ms-auto text-xs text-gray-400 hover:text-gray-600 underline"
-          >
-            مسح الفلاتر
-          </button>
         )}
       </div>
 
