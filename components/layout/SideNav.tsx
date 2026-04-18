@@ -4,13 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-const baseNavItems = [
-  { href: "/",              label: "الرئيسية" },
-  { href: "/customers",    label: "العملاء" },
-  { href: "/orders",       label: "الطلبات" },
-  { href: "/debts/wholesale", label: "الديون" },
-  { href: "/inventory",    label: "المخزون" },
-  { href: "/tasks",        label: "المهام" },
+const allNavItems = [
+  { href: "/",              label: "الرئيسية",  storeWorker: false },
+  { href: "/customers",    label: "العملاء",   storeWorker: false },
+  { href: "/orders",       label: "الطلبات",   storeWorker: false },
+  { href: "/debts/wholesale", label: "الديون", storeWorker: false },
+  { href: "/inventory",    label: "المخزون",   storeWorker: true  },
+  { href: "/tasks",        label: "المهام",    storeWorker: true  },
 ];
 
 const managerNavItems = [{ href: "/admin/users", label: "المستخدمون" }];
@@ -20,11 +20,14 @@ const accountItem = { href: "/account", label: "حسابي" };
 interface SideNavProps {
   isManager?: boolean;
   isSuperAdmin?: boolean;
+  isStoreWorker?: boolean;
 }
 
-export default function SideNav({ isManager = false, isSuperAdmin = false }: SideNavProps) {
+export default function SideNav({ isManager = false, isSuperAdmin = false, isStoreWorker = false }: SideNavProps) {
   const pathname = usePathname();
-  const navItems = (isManager || isSuperAdmin) ? [...baseNavItems, ...managerNavItems] : baseNavItems;
+
+  const filtered = allNavItems.filter((i) => !isStoreWorker || i.storeWorker);
+  const navItems = (isManager || isSuperAdmin) ? [...filtered, ...managerNavItems] : filtered;
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";

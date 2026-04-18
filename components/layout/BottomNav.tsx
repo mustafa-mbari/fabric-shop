@@ -7,6 +7,7 @@ const navItems = [
   {
     href: "/",
     label: "الرئيسية",
+    storeWorker: false,
     icon: (active: boolean) => (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -28,6 +29,7 @@ const navItems = [
   {
     href: "/customers",
     label: "العملاء",
+    storeWorker: false,
     icon: (active: boolean) => (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -49,6 +51,7 @@ const navItems = [
   {
     href: "/orders",
     label: "الطلبات",
+    storeWorker: false,
     icon: (active: boolean) => (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -70,6 +73,7 @@ const navItems = [
   {
     href: "/debts/wholesale",
     label: "الديون",
+    storeWorker: false,
     icon: (active: boolean) => (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -91,6 +95,7 @@ const navItems = [
   {
     href: "/inventory",
     label: "المخزون",
+    storeWorker: true,
     icon: (active: boolean) => (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -112,6 +117,7 @@ const navItems = [
   {
     href: "/tasks",
     label: "المهام",
+    storeWorker: true,
     icon: (active: boolean) => (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -132,8 +138,13 @@ const navItems = [
   },
 ] as const;
 
-export default function BottomNav() {
+interface BottomNavProps {
+  isStoreWorker?: boolean;
+}
+
+export default function BottomNav({ isStoreWorker = false }: BottomNavProps) {
   const pathname = usePathname();
+  const items = navItems.filter((i) => !isStoreWorker || i.storeWorker);
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
@@ -148,7 +159,7 @@ export default function BottomNav() {
     >
       <div className="flex items-stretch safe-bottom">
         <div className="flex items-stretch w-full min-h-[64px]">
-          {navItems.map((item) => {
+          {items.map((item) => {
             const active = isActive(item.href);
             return (
               <Link

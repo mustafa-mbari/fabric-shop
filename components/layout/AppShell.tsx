@@ -17,10 +17,11 @@ export default async function AppShell({ children, title }: AppShellProps) {
   const role = user?.user_metadata?.role as string | undefined;
   const isManager = role === "manager" || role === "super_admin";
   const isSuperAdmin = role === "super_admin";
+  const isStoreWorker = role === "store_worker";
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <SideNav isManager={isManager} isSuperAdmin={isSuperAdmin} />
+      <SideNav isManager={isManager} isSuperAdmin={isSuperAdmin} isStoreWorker={isStoreWorker} />
 
       <div className="flex flex-col flex-1 min-w-0">
         <TopBar title={title} />
@@ -28,7 +29,7 @@ export default async function AppShell({ children, title }: AppShellProps) {
         <main className="flex-1 px-4 py-5 md:px-6 pb-20 md:pb-6">{children}</main>
       </div>
 
-      <BottomNav />
+      <BottomNav isStoreWorker={isStoreWorker} />
     </div>
   );
 }

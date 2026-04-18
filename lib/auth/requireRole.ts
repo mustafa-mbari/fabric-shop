@@ -2,11 +2,16 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database.types";
 
-export type UserRole = "worker" | "manager" | "super_admin";
+export type UserRole = "store_worker" | "worker" | "manager" | "super_admin";
 
 type UserRow = Database["public"]["Tables"]["users"]["Row"];
 
-const roleLevel: Record<UserRole, number> = { worker: 0, manager: 1, super_admin: 2 };
+const roleLevel: Record<UserRole, number> = {
+  store_worker: 0,
+  worker: 1,
+  manager: 2,
+  super_admin: 3,
+};
 
 export const getRole = cache(async (): Promise<UserRole | null> => {
   const supabase = await createClient();
@@ -39,6 +44,26 @@ export async function requireRole(required: UserRole): Promise<void> {
   }
 
   if ((roleLevel[role] ?? 0) < (roleLevel[required] ?? 0)) {
+    throw new Response(
+      JSON.stringify({ error: "غير مصرح — صلاحيات غير كافية" }),
+      { status: 403, headers: { "Content-Type": "application/json" } },
+    );
+  }
+}
+
+// For routes accessible to store_worker AND manager/super_admin but NOT regular worker.
+// Usage: try { await requireAnyRole(["store_worker", "manager", "super_admin"]); } catch (res) { return res as Response; }
+export async function requireAnyRole(roles: UserRole[]): Promise<void> {
+  const role = await getRole();
+
+  if (!role) {
+    throw new Response(
+      JSON.stringify({ error: "غير مصرح — يجب تسجيل الدخول" }),
+      { status: 401, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  if (!roles.includes(role)) {
     throw new Response(
       JSON.stringify({ error: "غير مصرح — صلاحيات غير كافية" }),
       { status: 403, headers: { "Content-Type": "application/json" } },

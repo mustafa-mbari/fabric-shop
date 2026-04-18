@@ -19,15 +19,17 @@ const statusLabel: Record<string, { text: string; className: string }> = {
 };
 
 const roleLabel: Record<string, string> = {
-  worker:      "موظف",
-  manager:     "مدير",
-  super_admin: "مدير عام",
+  store_worker: "موظف مخزن",
+  worker:       "موظف",
+  manager:      "مدير",
+  super_admin:  "مدير عام",
 };
 
 const roleOptions = [
-  { value: "worker",      label: "موظف" },
-  { value: "manager",     label: "مدير" },
-  { value: "super_admin", label: "مدير عام" },
+  { value: "store_worker", label: "موظف مخزن" },
+  { value: "worker",       label: "موظف" },
+  { value: "manager",      label: "مدير" },
+  { value: "super_admin",  label: "مدير عام" },
 ];
 
 export default function AdminUsersList() {

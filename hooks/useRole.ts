@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-export type ClientRole = "worker" | "manager" | "super_admin";
+export type ClientRole = "store_worker" | "worker" | "manager" | "super_admin";
 
 export function useRole() {
   const [role, setRole] = useState<ClientRole | null>(null);
@@ -19,5 +19,6 @@ export function useRole() {
     role,
     isManager: role === "manager" || role === "super_admin",
     isSuperAdmin: role === "super_admin",
+    isStoreWorker: role === "store_worker",
   };
 }

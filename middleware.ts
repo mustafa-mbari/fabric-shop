@@ -79,6 +79,18 @@ export async function middleware(request: NextRequest) {
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
+
+    // store_worker: only allowed on /inventory, /tasks, /account, /api
+    const role = user.user_metadata?.role as string | undefined;
+    if (role === "store_worker" && !pathname.startsWith("/api")) {
+      const allowed = ["/inventory", "/tasks", "/account"];
+      const isAllowed = allowed.some((p) => pathname === p || pathname.startsWith(p + "/"));
+      if (!isAllowed && !isAuthPath && !isPendingPath) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/inventory";
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
   return supabaseResponse;

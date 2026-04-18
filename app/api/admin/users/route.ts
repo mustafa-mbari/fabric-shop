@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const updateSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("status"), userId: z.string().uuid(), status: z.enum(["active", "rejected"]) }),
-  z.object({ action: z.literal("role"),   userId: z.string().uuid(), role: z.enum(["worker", "manager", "super_admin"]) }),
+  z.object({ action: z.literal("role"),   userId: z.string().uuid(), role: z.enum(["store_worker", "worker", "manager", "super_admin"]) }),
 ]);
 
 export async function PATCH(request: NextRequest) {
@@ -33,8 +33,7 @@ export async function PATCH(request: NextRequest) {
 
     const { userId, role } = parsed.data;
 
-    const supabase = await createClient();
-    const { error: dbError } = await supabase
+    const { error: dbError } = await adminClient
       .from("users")
       .update({ role } as never)
       .eq("id", userId);
@@ -57,8 +56,7 @@ export async function PATCH(request: NextRequest) {
   // status update
   const { userId, status } = parsed.data;
 
-  const supabase = await createClient();
-  const { error: dbError } = await supabase
+  const { error: dbError } = await adminClient
     .from("users")
     .update({ status } as never)
     .eq("id", userId);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { requireRole } from "@/lib/auth/requireRole";
+import { requireAnyRole } from "@/lib/auth/requireRole";
 import { taskUpdateSchema } from "@/lib/validation/task";
 
 export async function PATCH(
@@ -34,7 +34,7 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  try { await requireRole("manager"); } catch (res) { return res as Response; }
+  try { await requireAnyRole(["store_worker", "manager", "super_admin"]); } catch (res) { return res as Response; }
 
   const { id } = await params;
   const raw = await adminClient
