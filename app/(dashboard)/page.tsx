@@ -2,6 +2,7 @@ import AppShell from "@/components/layout/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import type { DashboardSummary } from "@/app/api/dashboard/summary/route";
 import { formatMoney } from "@/lib/utils/money";
+import { APP_VERSION } from "@/lib/config";
 import Link from "next/link";
 
 async function getSummary(): Promise<DashboardSummary | null> {
@@ -90,6 +91,22 @@ export default async function DashboardPage() {
               </Link>
             )}
           </div>
+        </div>
+
+        {/* App footer */}
+        <div className="pt-4 pb-2 text-center space-y-1">
+          <p className="text-xs text-gray-400">الإصدار {APP_VERSION}</p>
+          <p className="text-xs text-gray-400">
+            للتواصل والدعم:{" "}
+            <a
+              href="https://mbari.de"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 underline"
+            >
+              mbari.de
+            </a>
+          </p>
         </div>
       </div>
     </AppShell>
