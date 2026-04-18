@@ -88,6 +88,7 @@ const s = StyleSheet.create({
   },
   summaryLabel: { fontSize: 9, color: "#6b7280", marginBottom: 4 },
   summaryValue: { fontSize: 13, fontWeight: 700 },
+  emptyRow: { textAlign: "center", flex: 1 },
   footer: {
     position: "absolute",
     bottom: 24,
@@ -97,6 +98,8 @@ const s = StyleSheet.create({
     fontSize: 8,
     color: "#9ca3af",
   },
+  remainingRed: { color: "#dc2626" },
+  remainingGreen: { color: "#16a34a" },
 });
 
 export type CustomerForPDF = {
@@ -167,7 +170,7 @@ export default function DebtsPDF({
 
           {debts.length === 0 && (
             <View style={s.tableRow}>
-              <Text style={{ ...s.cellText, textAlign: "center", flex: 1 }}>
+              <Text style={[s.cellText, s.emptyRow]}>
                 لا توجد ديون
               </Text>
             </View>
@@ -189,7 +192,7 @@ export default function DebtsPDF({
                 style={[
                   s.cellText,
                   s.colRemaining,
-                  { color: debt.remaining > 0 ? "#dc2626" : "#16a34a" },
+                  debt.remaining > 0 ? s.remainingRed : s.remainingGreen,
                 ]}
               >
                 {formatMoney(debt.remaining)}
@@ -200,14 +203,14 @@ export default function DebtsPDF({
           {debts.length > 0 && (
             <View style={s.tableFooter}>
               <Text style={[s.footText, s.colDate]}>الإجمالي</Text>
-              <Text style={[s.footText, s.colType]} />
+              <Text style={[s.footText, s.colType]}>{""}</Text>
               <Text style={[s.footText, s.colTotal]}>{formatMoney(totalAmount)}</Text>
               <Text style={[s.footText, s.colPaid]}>{formatMoney(totalPaid)}</Text>
               <Text
                 style={[
                   s.footText,
                   s.colRemaining,
-                  { color: totalRemaining > 0 ? "#dc2626" : "#16a34a" },
+                  totalRemaining > 0 ? s.remainingRed : s.remainingGreen,
                 ]}
               >
                 {formatMoney(totalRemaining)}
