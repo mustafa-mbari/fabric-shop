@@ -21,6 +21,7 @@ export type PaymentRow = {
   debt_id: string;
   amount: number;
   note: string | null;
+  type: "PAYMENT" | "DEBT_ADDED";
   created_at: string;
 };
 
@@ -145,6 +146,7 @@ export function useAddDebtAmount(debtId: string) {
       if (!res.ok) throw new Error(json.error ?? "فشل تحديث الدين");
     },
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["payments", debtId] });
       qc.invalidateQueries({ queryKey: ["debt", debtId] });
       qc.invalidateQueries({ queryKey: ["debts"] });
     },

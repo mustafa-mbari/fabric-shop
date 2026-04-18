@@ -360,41 +360,51 @@ export default function DebtDetail({ id }: { id: string }) {
             <p className="text-sm text-gray-400 text-center py-4">لا توجد حركات بعد</p>
           ) : (
             <div className="space-y-3">
-              {payments.map((p) => (
-                <div key={p.id} className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-green-700">{formatMoney(p.amount)}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{formatDate(p.created_at)}</p>
-                    {p.note && <p className="text-xs text-gray-500 truncate">{p.note}</p>}
-                  </div>
-                  {isManager && (
-                    confirmPaymentId === p.id ? (
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          onClick={() => { handleDeletePayment(p.id); setConfirmPaymentId(null); }}
-                          disabled={deletingPayment}
-                          className="text-xs text-white bg-red-500 hover:bg-red-600 rounded-lg px-2.5 py-1 disabled:opacity-60"
-                        >
-                          {deletingPayment ? "..." : "تأكيد"}
-                        </button>
-                        <button
-                          onClick={() => setConfirmPaymentId(null)}
-                          className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg px-2.5 py-1"
-                        >
-                          إلغاء
-                        </button>
+              {payments.map((p) => {
+                const isDebtAdded = p.type === "DEBT_ADDED";
+                return (
+                  <div key={p.id} className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className={`text-sm font-semibold ${isDebtAdded ? "text-orange-600" : "text-green-700"}`}>
+                          {isDebtAdded ? "+" : "-"}{formatMoney(p.amount)}
+                        </p>
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${isDebtAdded ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"}`}>
+                          {isDebtAdded ? "إضافة دين" : "دفعة"}
+                        </span>
                       </div>
-                    ) : (
-                      <button
-                        onClick={() => setConfirmPaymentId(p.id)}
-                        className="shrink-0 text-xs text-red-400 hover:text-red-600 px-2 py-1"
-                      >
-                        حذف
-                      </button>
-                    )
-                  )}
-                </div>
-              ))}
+                      <p className="text-xs text-gray-400 mt-0.5">{formatDate(p.created_at)}</p>
+                      {p.note && <p className="text-xs text-gray-500 truncate">{p.note}</p>}
+                    </div>
+                    {isManager && !isDebtAdded && (
+                      confirmPaymentId === p.id ? (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => { handleDeletePayment(p.id); setConfirmPaymentId(null); }}
+                            disabled={deletingPayment}
+                            className="text-xs text-white bg-red-500 hover:bg-red-600 rounded-lg px-2.5 py-1 disabled:opacity-60"
+                          >
+                            {deletingPayment ? "..." : "تأكيد"}
+                          </button>
+                          <button
+                            onClick={() => setConfirmPaymentId(null)}
+                            className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg px-2.5 py-1"
+                          >
+                            إلغاء
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmPaymentId(p.id)}
+                          className="shrink-0 text-xs text-red-400 hover:text-red-600 px-2 py-1"
+                        >
+                          حذف
+                        </button>
+                      )
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

@@ -41,5 +41,14 @@ export async function POST(
 
   if (updateError) return NextResponse.json({ error: "فشل التحديث" }, { status: 500 });
 
+  const logEntry: Record<string, unknown> = {
+    debt_id: id,
+    amount: parsed.data.amount,
+    type: "DEBT_ADDED",
+  };
+  if (parsed.data.note) logEntry.note = parsed.data.note;
+
+  await adminClient.from("payments").insert(logEntry as never);
+
   return NextResponse.json({ success: true });
 }

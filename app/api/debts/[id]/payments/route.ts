@@ -9,6 +9,7 @@ type PaymentRow = {
   debt_id: string;
   amount: number;
   note: string | null;
+  type: "PAYMENT" | "DEBT_ADDED";
   created_at: string;
 };
 
