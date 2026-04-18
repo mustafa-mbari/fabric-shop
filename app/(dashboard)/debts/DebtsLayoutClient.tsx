@@ -20,10 +20,14 @@ export default function DebtsLayoutClient({ children }: { children: React.ReactN
   const [inputValue, setInputValue] = useState(currentSearch);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync input when URL search param changes (e.g. tab switch)
+  // Sync input only when the tab (pathname) changes, NOT on every URL update.
+  // Watching searchParams here would cause a loop: typing → debounce → URL update
+  // → effect fires → input reset mid-typing → chars lost.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     setInputValue(searchParams.get("search") ?? "");
-  }, [searchParams]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   // Clean up debounce timer on unmount
   useEffect(() => {

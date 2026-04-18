@@ -29,7 +29,7 @@ export async function PATCH(
 
   const raw = await adminClient
     .from("products")
-    .update(parsed.data)
+    .update(parsed.data as never)
     .eq("id", id)
     .is("deleted_at", null)
     .select()

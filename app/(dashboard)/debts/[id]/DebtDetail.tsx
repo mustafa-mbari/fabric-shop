@@ -318,44 +318,46 @@ export default function DebtDetail({ id }: { id: string }) {
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-3">
-          {debt.remaining > 0 && (
-            <button
-              onClick={() => setShowPaymentSheet(true)}
-              className="flex-1 rounded-xl py-3 text-base font-semibold text-white"
-              style={{ background: "linear-gradient(135deg, #0284c7, #0369a1)" }}
-            >
-              + تسجيل دفعة
-            </button>
-          )}
-          {isManager && (
-            <button
-              onClick={() => setShowAddAmountSheet(true)}
-              className="flex-1 rounded-xl py-3 text-base font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50"
-            >
-              + إضافة دين
-            </button>
-          )}
-          <a
-            href={`/api/export/debts?customer_id=${debt.customer_id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-1.5"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            كشف حساب PDF
-          </a>
-        </div>
-
-        {/* Payments history */}
+        {/* Transactions card — header + action buttons + log */}
         <div className="bg-white rounded-2xl border border-gray-200 p-5">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">سجل المدفوعات</h3>
+          {/* Card header: title + action buttons */}
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <h3 className="text-sm font-semibold text-gray-700">سجل الحركات</h3>
+            <div className="flex items-center gap-2">
+              {debt.remaining > 0 && (
+                <button
+                  onClick={() => setShowPaymentSheet(true)}
+                  className="rounded-xl px-3 py-1.5 text-xs font-semibold text-white"
+                  style={{ background: "linear-gradient(135deg, #0284c7, #0369a1)" }}
+                >
+                  + تسجيل دفعة
+                </button>
+              )}
+              {isManager && (
+                <button
+                  onClick={() => setShowAddAmountSheet(true)}
+                  className="rounded-xl px-3 py-1.5 text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50"
+                >
+                  + إضافة دين
+                </button>
+              )}
+              <a
+                href={`/api/export/debts?customer_id=${debt.customer_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="كشف حساب PDF"
+                className="rounded-xl border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50 flex items-center"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
           {!payments || payments.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-4">لا توجد مدفوعات بعد</p>
+            <p className="text-sm text-gray-400 text-center py-4">لا توجد حركات بعد</p>
           ) : (
             <div className="space-y-3">
               {payments.map((p) => (

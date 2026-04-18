@@ -7,6 +7,7 @@ export type ProductRow = {
   id: string;
   name: string;
   type: "METER" | "UNIT";
+  product_type: string | null;
   quantity: number;
   color: string | null;
   price: number | null;
@@ -14,10 +15,19 @@ export type ProductRow = {
   created_at: string;
 };
 
-async function fetchProducts(search?: string, type?: "METER" | "UNIT"): Promise<ProductRow[]> {
+export interface ProductFilters {
+  search?: string;
+  type?: "METER" | "UNIT";
+  productType?: string;
+  color?: string;
+}
+
+async function fetchProducts(filters: ProductFilters): Promise<ProductRow[]> {
   const params = new URLSearchParams();
-  if (search?.trim()) params.set("search", search.trim());
-  if (type)           params.set("type", type);
+  if (filters.search?.trim())      params.set("search",       filters.search.trim());
+  if (filters.type)                params.set("type",         filters.type);
+  if (filters.productType?.trim()) params.set("product_type", filters.productType.trim());
+  if (filters.color?.trim())       params.set("color",        filters.color.trim());
   const url = params.size ? `/api/products?${params}` : "/api/products";
   const res = await fetch(url);
   if (!res.ok) throw new Error("فشل تحميل المنتجات");
@@ -25,10 +35,10 @@ async function fetchProducts(search?: string, type?: "METER" | "UNIT"): Promise<
   return json.data as ProductRow[];
 }
 
-export function useProducts(search?: string, type?: "METER" | "UNIT") {
+export function useProducts(filters: ProductFilters = {}) {
   return useQuery({
-    queryKey: ["products", search ?? "", type ?? ""],
-    queryFn: () => fetchProducts(search, type),
+    queryKey: ["products", filters.search ?? "", filters.type ?? "", filters.productType ?? "", filters.color ?? ""],
+    queryFn: () => fetchProducts(filters),
     staleTime: 30_000,
   });
 }

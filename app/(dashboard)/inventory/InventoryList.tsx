@@ -9,7 +9,7 @@ import { ProductCardSkeleton } from "@/components/ui/Skeleton";
 import ActionMenu from "@/components/ui/ActionMenu";
 import { formatMoney } from "@/lib/utils/money";
 
-const typeLabel: Record<string, { text: string; className: string }> = {
+const measureLabel: Record<string, { text: string; className: string }> = {
   METER: { text: "متر",   className: "bg-blue-100 text-blue-700" },
   UNIT:  { text: "وحدة",  className: "bg-purple-100 text-purple-700" },
 };
@@ -20,31 +20,50 @@ function quantityColor(qty: number) {
   return "text-green-700 font-semibold";
 }
 
-type TypeFilter = "ALL" | "METER" | "UNIT";
+type MeasureFilter = "ALL" | "METER" | "UNIT";
 
-const TYPE_FILTERS: { value: TypeFilter; label: string }[] = [
+const MEASURE_FILTERS: { value: MeasureFilter; label: string }[] = [
   { value: "ALL",   label: "الكل" },
   { value: "METER", label: "متر" },
   { value: "UNIT",  label: "قطعة" },
 ];
 
+interface Filters {
+  name: string;
+  productType: string;
+  color: string;
+  measure: MeasureFilter;
+}
+
 export default function InventoryList() {
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
+  const [filters, setFilters] = useState<Filters>({ name: "", productType: "", color: "", measure: "ALL" });
+  const [debounced, setDebounced] = useState(filters);
   const router = useRouter();
   const { isManager } = useRole();
 
+  // Single debounce for all text filters
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    const t = setTimeout(() => setDebounced(filters), 300);
     return () => clearTimeout(t);
-  }, [search]);
+  }, [filters]);
 
-  const { data: products, isLoading, isError } = useProducts(
-    debouncedSearch,
-    typeFilter === "ALL" ? undefined : typeFilter,
-  );
+  const hasFilter = filters.name || filters.productType || filters.color || filters.measure !== "ALL";
+
+  const { data: products, isLoading, isError } = useProducts({
+    search:      debounced.name || undefined,
+    type:        debounced.measure === "ALL" ? undefined : debounced.measure,
+    productType: debounced.productType || undefined,
+    color:       debounced.color || undefined,
+  });
   const { mutateAsync: deleteProduct } = useDeleteProduct();
+
+  function setField<K extends keyof Filters>(key: K, value: Filters[K]) {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function clearFilters() {
+    setFilters({ name: "", productType: "", color: "", measure: "ALL" });
+  }
 
   function menuItems(id: string) {
     return [
@@ -57,8 +76,8 @@ export default function InventoryList() {
 
   return (
     <>
-      {/* Search + add button */}
-      <div className="flex gap-3 mb-5">
+      {/* Top row: name search + add button */}
+      <div className="flex gap-3 mb-3">
         <div className="relative flex-1">
           <span className="absolute inset-y-0 end-3 flex items-center pointer-events-none">
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,8 +87,8 @@ export default function InventoryList() {
           </span>
           <input
             type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={filters.name}
+            onChange={(e) => setField("name", e.target.value)}
             placeholder="ابحث باسم المنتج..."
             className="w-full rounded-xl border border-gray-200 bg-white pe-10 ps-4 py-2.5
                        text-sm text-gray-900 placeholder:text-gray-400
@@ -88,15 +107,35 @@ export default function InventoryList() {
         )}
       </div>
 
-      {/* Type filter chips */}
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-0.5">
-        {TYPE_FILTERS.map((f) => (
+      {/* Secondary filters: product type + color */}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <input
+          type="search"
+          value={filters.productType}
+          onChange={(e) => setField("productType", e.target.value)}
+          placeholder="نوع المنتج..."
+          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm
+                     placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+        />
+        <input
+          type="search"
+          value={filters.color}
+          onChange={(e) => setField("color", e.target.value)}
+          placeholder="اللون..."
+          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm
+                     placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+        />
+      </div>
+
+      {/* Measurement type chips + clear */}
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-0.5">
+        {MEASURE_FILTERS.map((f) => (
           <button
             key={f.value}
             type="button"
-            onClick={() => setTypeFilter(f.value)}
+            onClick={() => setField("measure", f.value)}
             className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors
-              ${typeFilter === f.value
+              ${filters.measure === f.value
                 ? "bg-brand-600 text-white"
                 : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
               }`}
@@ -104,6 +143,15 @@ export default function InventoryList() {
             {f.label}
           </button>
         ))}
+        {hasFilter && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="shrink-0 ms-auto text-xs text-gray-400 hover:text-gray-600 underline"
+          >
+            مسح الفلاتر
+          </button>
+        )}
       </div>
 
       {isLoading && (
@@ -121,8 +169,8 @@ export default function InventoryList() {
       {!isLoading && !isError && products?.length === 0 && (
         <div className="text-center py-16 text-gray-400">
           <p className="text-4xl mb-3">📦</p>
-          <p className="text-sm">{(search || typeFilter !== "ALL") ? "لا توجد نتائج مطابقة" : "لا يوجد منتجات في المخزون"}</p>
-          {!search && typeFilter === "ALL" && isManager && (
+          <p className="text-sm">{hasFilter ? "لا توجد نتائج مطابقة" : "لا يوجد منتجات في المخزون"}</p>
+          {!hasFilter && isManager && (
             <Link href="/inventory/new" className="mt-4 inline-block text-sm text-brand-600 font-medium hover:underline">
               أضف أول منتج
             </Link>
@@ -135,7 +183,7 @@ export default function InventoryList() {
           {/* Cards — mobile */}
           <div className="space-y-2 md:hidden">
             {products.map((p) => {
-              const badge = typeLabel[p.type] ?? typeLabel["UNIT"]!;
+              const badge = measureLabel[p.type] ?? measureLabel["UNIT"]!;
               return (
                 <div key={p.id} className="relative">
                   <div className="bg-white rounded-xl border border-gray-200 p-4 pe-12">
@@ -146,6 +194,11 @@ export default function InventoryList() {
                           <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${badge.className}`}>
                             {badge.text}
                           </span>
+                          {p.product_type && (
+                            <span className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                              {p.product_type}
+                            </span>
+                          )}
                           {p.color && (
                             <span className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
                               {p.color}
@@ -190,21 +243,22 @@ export default function InventoryList() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-start ps-5 pe-3 py-3 font-medium text-gray-600">المنتج</th>
-                  <th className="text-start px-3 py-3 font-medium text-gray-600">النوع</th>
+                  <th className="text-start px-3 py-3 font-medium text-gray-600">نوع المنتج</th>
+                  <th className="text-start px-3 py-3 font-medium text-gray-600">المقياس</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">اللون</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">السعر</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">الكمية</th>
                   <th className="text-start px-3 py-3 font-medium text-gray-600">إجمالي المخزون</th>
-                  <th className="text-start px-3 py-3 font-medium text-gray-600">الوصف</th>
                   {isManager && <th className="py-3 pe-3 w-12" />}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {products.map((p) => {
-                  const badge = typeLabel[p.type] ?? typeLabel["UNIT"]!;
+                  const badge = measureLabel[p.type] ?? measureLabel["UNIT"]!;
                   return (
                     <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                       <td className="ps-5 pe-3 py-3.5 font-medium text-gray-900">{p.name}</td>
+                      <td className="px-3 py-3.5 text-gray-700">{p.product_type ?? "—"}</td>
                       <td className="px-3 py-3.5">
                         <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${badge.className}`}>
                           {badge.text}
@@ -220,7 +274,6 @@ export default function InventoryList() {
                           ? formatMoney(Math.floor(p.price * p.quantity))
                           : "—"}
                       </td>
-                      <td className="px-3 py-3.5 text-gray-500 truncate max-w-xs">{p.description ?? "—"}</td>
                       {isManager && (
                         <td className="pe-3 py-3.5 text-end">
                           <ActionMenu items={menuItems(p.id)} />
